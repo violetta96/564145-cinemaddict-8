@@ -7,8 +7,17 @@ const randomCardsRange = {
 const getRandomNumber = (max, min) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 // функция для создания филтра
-export const generateFilter = ({name, id, activeStatus = false, cardRandomNumber = getRandomNumber(randomCardsRange.MIN, randomCardsRange.MAX)}) => {
-  return `<a href="#${id}" id="#filter-${id}" class="main-navigation__item ${activeStatus ? `main-navigation__item--active` : ``}">
+export const generateFilter = ({
+  name,
+  id,
+  activeStatus = false,
+  cardRandomNumber = getRandomNumber(randomCardsRange.MIN, randomCardsRange.MAX)
+}) => {
+  return `<a
+            href="#${id}"
+            id="#filter-${id}"
+            class="main-navigation__item ${activeStatus ? `main-navigation__item--active` : ``}"
+          >
              ${name}
              <span class="main-navigation__item-count ${activeStatus ? `visually-hidden` : ``}">
                ${cardRandomNumber}

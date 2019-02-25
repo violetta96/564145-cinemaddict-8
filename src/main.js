@@ -33,10 +33,9 @@ const filmsListContainerRated = document.querySelector(`.films-list__container--
 // функция для отрисовки фильтров
 const renderFilters = () => {
   let fragment = ``;
-  filterItems
-      .forEach((i) => {
-        fragment += generateFilter(i);
-      });
+  filterItems.forEach((item) => {
+    fragment += generateFilter(item);
+  });
   mainNavigation.innerHTML = fragment;
 };
 
@@ -61,8 +60,8 @@ const renderExtraCards = (cards, container) => {
 // функция для добовления оброботчика событий на фильтр
 const onFilterClick = (evt) => {
   const filterName = evt.target.closest(`.main-navigation__item`);
-  const id = filterName.getAttribute(`id`);
   if (filterName) {
+    const id = filterName.id;
     const cardsNumber = filterName.querySelector(`.main-navigation__item-count`).textContent;
     renderCards(cardsNumber, filmsListContainer);
     if (id === `#filter-all`) {
