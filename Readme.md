@@ -1,7 +1,7 @@
 # Личный проект «Киноман» [![Build status][travis-image]][travis-url]
 
 * Студент: [Виоланта Свирид](https://up.htmlacademy.ru/ecmascript/8/user/564145).
-* Наставник: `Неизвестно`.
+* Наставник: [Юлька Долгун](https://htmlacademy.ru/profile/id42333).
 
 ---
 
