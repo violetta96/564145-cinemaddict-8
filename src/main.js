@@ -1,6 +1,6 @@
-
+import card from './data.js';
 import {generateFilter} from './make-filter.js';
-import {generateCard, generateExtraCard} from './make-task.js';
+import {generateCard, generateExtraCard} from './make-card.js';
 
 const CARDS_AMOUNT = 7;
 const EXTRA_CARDS_AMOUNT = 2;
@@ -43,7 +43,7 @@ const renderFilters = () => {
 const renderCards = (cards) => {
   let fragment = ``;
   for (let i = 0; i < cards; i++) {
-    fragment += generateCard();
+    fragment += generateCard(card());
   }
   filmsListContainer.innerHTML = fragment;
 };
@@ -52,7 +52,7 @@ const renderCards = (cards) => {
 const renderExtraCards = (cards, container) => {
   let fragment = ``;
   for (let i = 0; i < cards; i++) {
-    fragment += generateExtraCard();
+    fragment += generateExtraCard(card());
   }
   container.innerHTML = fragment;
 };
