@@ -60,21 +60,20 @@ const getRandomItem = (items) => items[getRandomNumber(0, items.length)];
 const getRandomInt = (min, max) => Math.floor(Math.random() * (1 + max - min)) + min;
 
 const getRandomDescription = (items) => {
-  let newArray = items;
-  newArray.sort(() => Math.random() - 0.5);
-  newArray = newArray.slice(0, getRandomInt(1, 3));
+  items.sort(() => Math.random() - 0.5);
+  items = items.slice(0, getRandomInt(1, 3));
 
-  return newArray;
+  return items;
 };
 
 const getRandomRating = () => {
   let ratingOne = getRandomInt(1, 9);
   let ratingTwo = getRandomInt(0, 9);
-  let newArray = ratingOne + `.` + ratingTwo;
+  let rating = ratingOne + `.` + ratingTwo;
   if (ratingOne === 1 && ratingTwo === 0) {
-    newArray = ratingOne + `` + ratingTwo;
+    rating = ratingOne + `` + ratingTwo;
   }
-  return newArray;
+  return rating;
 };
 
 export default () => ({
@@ -86,10 +85,7 @@ export default () => ({
     'min': getRandomInt(0, 60),
   },
   genre: getRandomItem(genres),
-  picture: {
-    'src': `./images/posters/` + getRandomItem(posters) + `.jpg`,
-    'alt': getRandomItem(posters),
-  },
+  picture: getRandomItem(posters),
   description: getRandomDescription(sentences),
   comments: getRandomInt(0, 100),
 });

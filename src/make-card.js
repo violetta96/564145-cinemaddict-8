@@ -8,7 +8,7 @@ export const generateCard = (card) => {
               <span class="film-card__duration">${card.duration.hour}h&nbsp;${card.duration.min}m</span>
               <span class="film-card__genre">${card.genre}</span>
             </p>
-            <img src="${card.picture.src}" alt="${card.picture.alt}" class="film-card__poster">
+            <img src="./images/posters/${card.picture}.jpg" alt="${card.picture}" class="film-card__poster">
             <p class="film-card__description">${card.description}</p>
             <button class="film-card__comments">${card.comments} comments</button>
             <form class="film-card__controls">
@@ -29,7 +29,7 @@ export const generateExtraCard = (card) => {
               <span class="film-card__duration">${card.duration.hour}h&nbsp;${card.duration.min}m</span>
               <span class="film-card__genre">${card.genre}</span>
             </p>
-           <img src="${card.picture.src}" alt="${card.picture.alt}" class="film-card__poster">
+           <img src="./images/posters/${card.picture}.jpg" alt="${card.picture}" class="film-card__poster">
            <button class="film-card__comments">${card.comments} comments</button>
          </article>`;
 };
