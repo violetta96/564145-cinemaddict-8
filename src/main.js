@@ -2,7 +2,7 @@ import card from './data.js';
 import {generateFilter} from './make-filter.js';
 import Card from './card.js';
 import Popup from './popup.js';
-// import {generateCard} from './make-card.js';
+
 
 const CARDS_AMOUNT = 7;
 const EXTRA_CARDS_AMOUNT = 2;
@@ -43,19 +43,20 @@ const renderFilters = () => {
 };
 
 // функция для отрисовки карточек
-const renderCards = (cards, container, isextra) => {
+const renderCards = (amount, container, isextra) => {
   const fragment = document.createDocumentFragment();
-  for (let i = 0; i < cards; i++) {
-    const cardComponent = new Card(card(), isextra);
-    const popupComponent = new Popup(card());
+  for (let i = 0; i < amount; i++) {
+    const cards = card();
+    const cardComponent = new Card(cards, isextra);
+    const popupComponent = new Popup(cards);
     const body = document.querySelector(`body`);
 
-    cardComponent.onComments = () => {
+    cardComponent.onCommentsClick = () => {
       popupComponent.render();
       body.appendChild(popupComponent.element);
     };
 
-    popupComponent.onClose = () => {
+    popupComponent.onCloseClick = () => {
       body.removeChild(popupComponent.element);
       popupComponent.unrender();
     };

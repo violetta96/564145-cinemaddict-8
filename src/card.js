@@ -25,7 +25,7 @@ export default class Card {
     return this._element;
   }
 
-  set onComments(fn) {
+  set onCommentsClick(fn) {
     this._onComments = fn;
   }
 

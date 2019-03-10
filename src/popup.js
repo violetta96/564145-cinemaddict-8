@@ -1,7 +1,7 @@
 import {createElement} from './create-element.js';
 
 export default class Card {
-  constructor(data, isExtra) {
+  constructor(data) {
     this._title = data.title;
     this._rating = data.rating;
     this._year = data.year;
@@ -10,7 +10,6 @@ export default class Card {
     this._picture = data.picture;
     this._description = data.description;
     this._comments = data.comments;
-    this._isExtra = isExtra;
 
     this._element = null;
     this._onClose = null;
@@ -42,7 +41,7 @@ export default class Card {
     return this._element;
   }
 
-  set onClose(fn) {
+  set onCloseClick(fn) {
     this._onClose = fn;
   }
 
