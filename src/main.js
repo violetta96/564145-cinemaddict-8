@@ -1,6 +1,8 @@
 import card from './data.js';
 import {generateFilter} from './make-filter.js';
-import {generateCard, generateExtraCard} from './make-card.js';
+import Card from './card.js';
+import Popup from './popup.js';
+// import {generateCard} from './make-card.js';
 
 const CARDS_AMOUNT = 7;
 const EXTRA_CARDS_AMOUNT = 2;
@@ -25,6 +27,7 @@ const filterItems = [
   }
 ];
 
+const isExtra = true;
 const mainNavigation = document.querySelector(`.main-navigation`);
 const filmsListContainer = document.querySelector(`.films-list__container`);
 const filmsListContainerCommented = document.querySelector(`.films-list__container--commented`);
@@ -40,27 +43,33 @@ const renderFilters = () => {
 };
 
 // функция для отрисовки карточек
-const renderCards = (cards) => {
-  let fragment = ``;
+const renderCards = (cards, container, isextra) => {
+  const fragment = document.createDocumentFragment();
   for (let i = 0; i < cards; i++) {
-    fragment += generateCard(card());
-  }
-  filmsListContainer.innerHTML = fragment;
-};
+    const cardComponent = new Card(card(), isextra);
+    const popupComponent = new Popup(card());
+    const body = document.querySelector(`body`);
 
-// функция для отрисовки дополнительных карточек
-const renderExtraCards = (cards, container) => {
-  let fragment = ``;
-  for (let i = 0; i < cards; i++) {
-    fragment += generateExtraCard(card());
+    cardComponent.onComments = () => {
+      popupComponent.render();
+      body.appendChild(popupComponent.element);
+    };
+
+    popupComponent.onClose = () => {
+      body.removeChild(popupComponent.element);
+      popupComponent.unrender();
+    };
+
+    fragment.appendChild(cardComponent.render());
   }
-  container.innerHTML = fragment;
+  container.appendChild(fragment);
 };
 
 // функция для добовления оброботчика событий на фильтр
 const onFilterClick = (evt) => {
   const filterName = evt.target.closest(`.main-navigation__item`);
   if (filterName) {
+    filmsListContainer.innerHTML = ``;
     const id = filterName.id;
     const cardsNumber = filterName.querySelector(`.main-navigation__item-count`).textContent;
     renderCards(cardsNumber, filmsListContainer);
@@ -71,8 +80,8 @@ const onFilterClick = (evt) => {
 };
 
 renderFilters();
-renderCards(CARDS_AMOUNT);
-renderExtraCards(EXTRA_CARDS_AMOUNT, filmsListContainerCommented);
-renderExtraCards(EXTRA_CARDS_AMOUNT, filmsListContainerRated);
+renderCards(CARDS_AMOUNT, filmsListContainer);
+renderCards(EXTRA_CARDS_AMOUNT, filmsListContainerCommented, isExtra);
+renderCards(EXTRA_CARDS_AMOUNT, filmsListContainerRated, isExtra);
 
 document.body.addEventListener(`click`, onFilterClick);
