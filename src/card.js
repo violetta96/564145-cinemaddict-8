@@ -1,7 +1,8 @@
-import {createElement} from './create-element.js';
+import Component from './component.js';
 
-export default class Card {
+export default class Card extends Component {
   constructor(data, isExtra) {
+    super();
     this._title = data.title;
     this._rating = data.rating;
     this._year = data.year;
@@ -12,17 +13,12 @@ export default class Card {
     this._comments = data.comments;
     this._isExtra = isExtra;
 
-    this._element = null;
     this._onComments = null;
     this._onCommentsButtonClick = this._onCommentsButtonClick.bind(this);
   }
 
   _onCommentsButtonClick() {
     return typeof this._onComments === `function` && this._onComments();
-  }
-
-  get element() {
-    return this._element;
   }
 
   set onCommentsClick(fn) {
@@ -47,19 +43,6 @@ export default class Card {
                 <button class="film-card__controls-item button film-card__controls-item--favorite"><!--Mark as favorite-->FAV</button>
              </form>` : ``}
            </article>`.trim();
-  }
-
-  render() {
-    if (!this._element) {
-      this._element = createElement(this.template);
-      this.bind();
-    }
-    return this._element;
-  }
-
-  unrender() {
-    this.unbind();
-    this._element = null;
   }
 
   bind() {

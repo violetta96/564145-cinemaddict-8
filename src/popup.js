@@ -1,7 +1,8 @@
-import {createElement} from './create-element.js';
+import Component from './component.js';
 
-export default class Card {
+export default class Card extends Component {
   constructor(data) {
+    super();
     this._title = data.title;
     this._rating = data.rating;
     this._year = data.year;
@@ -11,7 +12,6 @@ export default class Card {
     this._description = data.description;
     this._comments = data.comments;
 
-    this._element = null;
     this._onClose = null;
     this._onCloseButtonClick = this._onCloseButtonClick.bind(this);
   }
@@ -35,10 +35,6 @@ export default class Card {
 
   _onCloseButtonClick() {
     return typeof this._onClose === `function` && this._onClose();
-  }
-
-  get element() {
-    return this._element;
   }
 
   set onCloseClick(fn) {
@@ -186,16 +182,9 @@ export default class Card {
     </section>`.trim();
   }
 
-  render() {
-    if (!this._element) {
-      this._element = createElement(this.template);
-      this.bind();
-    }
-    return this._element;
-  }
-
   unrender() {
     this.unbind();
+    this._element.remove();
     this._element = null;
   }
 
