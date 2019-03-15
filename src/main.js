@@ -46,9 +46,9 @@ const renderFilters = () => {
 const renderCards = (amount, container, isextra) => {
   const fragment = document.createDocumentFragment();
   for (let i = 0; i < amount; i++) {
-    const cards = card();
-    const cardComponent = new Card(cards, isextra);
-    const popupComponent = new Popup(cards);
+    const cardData = card();
+    const cardComponent = new Card(cardData, isextra);
+    const popupComponent = new Popup(cardData);
     const body = document.querySelector(`body`);
 
     cardComponent.onCommentsClick = () => {
