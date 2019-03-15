@@ -47,11 +47,11 @@ export default class Card extends Component {
 
   bind() {
     this._element.querySelector(`.film-card__comments`)
-          .addEventListener(`click`, this._onCommentsButtonClick);
+      .addEventListener(`click`, this._onCommentsButtonClick);
   }
 
   unbind() {
     this._element.querySelector(`.film-card__comments`)
-          .removeEventListener(`click`, this._onCommentsButtonClick);
+      .removeEventListener(`click`, this._onCommentsButtonClick);
   }
 }

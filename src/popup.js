@@ -182,19 +182,13 @@ export default class Card extends Component {
     </section>`.trim();
   }
 
-  unrender() {
-    this.unbind();
-    this._element.remove();
-    this._element = null;
-  }
-
   bind() {
     this._element.querySelector(`.film-details__close-btn`)
-          .addEventListener(`click`, this._onCloseButtonClick);
+      .addEventListener(`click`, this._onCloseButtonClick);
   }
 
   unbind() {
     this._element.querySelector(`.film-details__close-btn`)
-          .removeEventListener(`click`, this._onCloseButtonClick);
+      .removeEventListener(`click`, this._onCloseButtonClick);
   }
 }
