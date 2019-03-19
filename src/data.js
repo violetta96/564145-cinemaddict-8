@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 const titles = [
   `Dark Star`,
   `Trust`,
@@ -16,7 +18,7 @@ const titles = [
   `Moving`,
 ];
 
-const genres = [
+const genres = new Set([
   `Comedy`,
   `Action`,
   `Crime`,
@@ -30,7 +32,7 @@ const genres = [
   `Historical`,
   `Thriller`,
   `Romance`,
-];
+]);
 
 const posters = [
   `accused`,
@@ -39,6 +41,58 @@ const posters = [
   `fuga-da-new-york`,
   `moonrise`,
   `three-friends`,
+];
+
+const countries = [
+  `USA`,
+  `UK`,
+  `Spaine`,
+  `Canada`,
+  `Germany`,
+  `Brazil`,
+  `France`,
+  `Italy`,
+];
+
+const directors = [
+  `Samuel L. Jackson`,
+  `Catherine Keener`,
+  `Sophia Bush`,
+  `Brad Bird`,
+  `Jack Nicholson`,
+  `Ralph Fiennes`,
+  `Meryl Streep`,
+  `Jodie Foster`,
+];
+
+const writers = [
+  `Samuel L. Jackson`,
+  `Catherine Keener`,
+  `Sophia Bush`,
+  `Brad Bird`,
+  `Jack Nicholson`,
+  `Ralph Fiennes`,
+  `Meryl Streep`,
+  `Jodie Foster`,
+];
+
+const actors = [
+  `Samuel L. Jackson`,
+  `Catherine Keener`,
+  `Sophia Bush`,
+  `Brad Bird`,
+  `Jack Nicholson`,
+  `Ralph Fiennes`,
+  `Meryl Streep`,
+  `Jodie Foster`,
+];
+
+const age = [
+  `0`,
+  `6`,
+  `12`,
+  `16`,
+  `18`,
 ];
 
 const sentences = [
@@ -76,16 +130,46 @@ const getRandomRating = () => {
   return rating;
 };
 
+const getRandomItems = (items, num) => {
+  let newArray = [...items];
+  newArray.sort(() => Math.random() - 0.5);
+  newArray = newArray.slice(0, num);
+
+  return newArray;
+};
+
 export default () => ({
   title: getRandomItem(titles),
   rating: getRandomRating(),
-  year: getRandomInt(2000, 2019),
-  duration: {
-    'hour': getRandomInt(1, 3),
-    'min': getRandomInt(0, 60),
+  releaseDate: moment(`${getRandomInt(1, 12)}-${getRandomInt(1, 28)}-${getRandomInt(2000, 2019)}`, `MM-DD-YYYY`).format(`DD MMMM YYYY`),
+  duration: (getRandomInt(1, 2) * 60 + getRandomInt(0, 60)),
+  genre: {
+    three: getRandomItems(genres, 3),
+    one: getRandomItems(genres, 1)
   },
-  genre: getRandomItem(genres),
   picture: getRandomItem(posters),
   description: getRandomDescription(sentences),
-  comments: getRandomInt(0, 100),
+  director: getRandomItem(directors),
+  writer: getRandomItem(writers),
+  actors: getRandomItems(actors, 3),
+  country: getRandomItem(countries),
+  age: getRandomItem(age),
+  userRating: null,
+  isFavourite: false,
+  isWatched: false,
+  inWatchlist: false,
+  comments: [
+    {
+      author: `Max Maxoveev`,
+      date: new Date(),
+      text: `Boring!`,
+      emoji: `😴`,
+    },
+    {
+      author: `Alex Nikiforov`,
+      date: new Date(),
+      text: `Awesome!`,
+      emoji: `😀`,
+    },
+  ],
 });

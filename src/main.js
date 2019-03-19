@@ -61,6 +61,16 @@ const renderCards = (amount, container, isextra) => {
       popupComponent.unrender();
     };
 
+    popupComponent.onSubmit = (updatedTaskData) => {
+      cardData._comments = updatedTaskData.comments;
+      cardData._userRating = updatedTaskData.userRating;
+      cardData._isFavourite = updatedTaskData.isFavourite;
+      cardData._isWatched = updatedTaskData.isWatched;
+      cardData._isWatchlist = updatedTaskData.isWatchlist;
+
+      cardComponent.update(cardData);
+    };
+
     fragment.appendChild(cardComponent.render());
   }
   container.appendChild(fragment);
