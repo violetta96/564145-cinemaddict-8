@@ -170,7 +170,7 @@ export default class Popup extends Component {
               </tr>
               <tr class="film-details__row">
                 <td class="film-details__term">Runtime</td>
-                <td class="film-details__cell">${this._duration}m</td>
+                <td class="film-details__cell">${60 * (this._duration.hour) + this._duration.min}m</td>
               </tr>
               <tr class="film-details__row">
                 <td class="film-details__term">Country</td>
@@ -179,7 +179,7 @@ export default class Popup extends Component {
               <tr class="film-details__row">
                 <td class="film-details__term">Genres</td>
                 <td class="film-details__cell">
-                ${this._genre.three.map((genre) => `
+                ${this._genre.map((genre) => `
                   <span class="film-details__genre">${genre}</span>`).join(``)}
               </tr>
             </table>

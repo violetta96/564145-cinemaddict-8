@@ -142,11 +142,11 @@ export default () => ({
   title: getRandomItem(titles),
   rating: getRandomRating(),
   releaseDate: moment(`${getRandomInt(1, 12)}-${getRandomInt(1, 28)}-${getRandomInt(2000, 2019)}`, `MM-DD-YYYY`).format(`DD MMMM YYYY`),
-  duration: (getRandomInt(1, 2) * 60 + getRandomInt(0, 60)),
-  genre: {
-    three: getRandomItems(genres, 3),
-    one: getRandomItems(genres, 1)
+  duration: {
+    hour: getRandomInt(1, 2),
+    min: getRandomInt(0, 59)
   },
+  genre: getRandomItems(genres, 3),
   picture: getRandomItem(posters),
   description: getRandomDescription(sentences),
   director: getRandomItem(directors),

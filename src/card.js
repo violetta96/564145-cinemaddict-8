@@ -28,21 +28,14 @@ export default class Card extends Component {
     this._onComments = fn;
   }
 
-  // функция для перевода минут в часы и минуты
-  _getTimeFromMins(mins) {
-    let hours = Math.trunc(mins / 60);
-    let minutes = mins % 60;
-    return hours + `h` + ` ` + minutes + `m`;
-  }
-
   get template() {
     return `<article class="film-card ${this._isExtra ? `film-card--no-controls` : ``}">
               <h3 class="film-card__title">${this._title}</h3>
               <p class="film-card__rating">${this._rating}</p>
               <p class="film-card__info">
                 <span class="film-card__year">${this._releaseDate.match(/\d{4}/)}</span>
-                <span class="film-card__duration">${this._getTimeFromMins(this._duration)}</span>
-                <span class="film-card__genre">${this._genre.one}</span>
+                <span class="film-card__duration">${this._duration.hour}h&nbsp;${this._duration.min}m</span>
+                <span class="film-card__genre">${this._genre[0]}</span>
               </p>
               <img src="./images/posters/${this._picture}.jpg" alt="${this._picture}" class="film-card__poster">
               <p class="film-card__description">${this._description}</p>
