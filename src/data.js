@@ -138,7 +138,7 @@ const getRandomItems = (items, num) => {
   return newArray;
 };
 
-export default () => ({
+export const card = () => ({
   title: getRandomItem(titles),
   rating: getRandomRating(),
   releaseDate: moment(`${getRandomInt(1, 12)}-${getRandomInt(1, 28)}-${getRandomInt(2000, 2019)}`, `MM-DD-YYYY`).format(`DD MMMM YYYY`),
@@ -155,9 +155,9 @@ export default () => ({
   country: getRandomItem(countries),
   age: getRandomItem(age),
   userRating: null,
-  isFavourite: false,
   isWatched: false,
-  inWatchlist: false,
+  isWatchlist: false,
+  isFavorite: false,
   comments: [
     {
       author: `Max Maxoveev`,
@@ -173,3 +173,5 @@ export default () => ({
     },
   ],
 });
+
+export const cardsData = (limit) => [...Array(limit).keys()].map(card);

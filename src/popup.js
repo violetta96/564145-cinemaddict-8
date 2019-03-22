@@ -20,12 +20,12 @@ export default class Popup extends Component {
     this._description = data.description;
     this._comments = data.comments;
     this._userRating = data.userRating;
-    this._isFavourite = data.isFavourite;
-    this._isWatched = data.isWatched;
-    this._isWatchlist = data.isWatchlist;
 
     this._onClose = null;
     this._onSubmit = null;
+    this._isWatchlist = data.InWatchlist;
+    this._isWatched = data.isWatched;
+    this._isFavorite = data.isFavorite;
     this._onCloseButtonClick = this._onCloseButtonClick.bind(this);
     this._onChangeEmoji = this._onChangeEmoji.bind(this);
     this._onScoreClick = this._onScoreClick.bind(this);
@@ -52,9 +52,9 @@ export default class Popup extends Component {
     const entry = {
       comment: {},
       userRating: ``,
-      isFavourite: ``,
-      isWatched: ``,
-      isWatchlist: ``,
+      isWatchlist: this._isWatchlist,
+      isWatched: this._isWatched,
+      isFavorite: this._isFavorite
     };
 
     const cardMapper = Popup.createMapper(entry);
@@ -69,7 +69,7 @@ export default class Popup extends Component {
   }
 
   _onCommentAdd(evt) {
-    if (evt.keyCode === KEYCODE_ENTER) {
+    if (evt.ctrlKey && evt.keyCode === KEYCODE_ENTER) {
       evt.preventDefault();
 
       const formData = new FormData(this._element.querySelector(`.film-details__inner`));
@@ -197,7 +197,7 @@ export default class Popup extends Component {
           <input type="checkbox" class="film-details__control-input visually-hidden" id="watched" name="watched" ${this._isWatched ? `checked` : ``}>
           <label for="watched" class="film-details__control-label film-details__control-label--watched">Already watched</label>
 
-          <input type="checkbox" class="film-details__control-input visually-hidden" id="favorite" name="favorite" ${this._isFavorite ? `checked` : ``}>
+          <input type="checkbox" class="film-details__control-input visually-hidden" id="favorite" name="favorite">
           <label for="favorite" class="film-details__control-label film-details__control-label--favorite">Add to favorites</label>
         </section>
 
@@ -290,9 +290,9 @@ export default class Popup extends Component {
 
   update(data) {
     this._userRating = data.userRating;
-    this._isFavourite = data.isFavourite;
     this._isWatched = data.isWatched;
     this._isWatchlist = data.isWatchlist;
+    this._isFavorite = data.isFavorite;
   }
 
   static createMapper(target) {
@@ -306,20 +306,14 @@ export default class Popup extends Component {
       'score': (value) => {
         target.userRating = value;
       },
-      'favorite': (value) => {
-        if (value === `on`) {
-          target.isFavourite = true;
-        }
-      },
       'watched': (value) => {
-        if (value === `on`) {
-          target.isWatched = true;
-        }
+        target.isWatchlist = value;
       },
       'watchlist': (value) => {
-        if (value === `on`) {
-          target.isWatchlist = true;
-        }
+        target.isWatched = value;
+      },
+      'favorite': (value) => {
+        target.isFavorite = value;
       },
     };
   }

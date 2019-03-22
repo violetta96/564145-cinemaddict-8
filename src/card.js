@@ -12,20 +12,62 @@ export default class Card extends Component {
     this._description = data.description;
     this._comments = data.comments;
     this._isExtra = isExtra;
+    this._isWatchlist = data.isWatchlist;
+    this._isWatched = data.isWatched;
+    this._isFavorite = data.isFavorite;
 
     this._onComments = null;
+    this._onAddToWatchList = null;
+    this._onMarkAsWatched = null;
+    this._onFavorite = null;
     this._onCommentsButtonClick = this._onCommentsButtonClick.bind(this);
-    this._isFavourite = data.isFavourite;
-    this._isWatched = data.isWatched;
-    this._isWatchlist = data.isWatchlist;
+    this._onAddToWatchListClick = this._onAddToWatchListClick.bind(this);
+    this._onMarkAsWatchedClick = this._onMarkAsWatchedClick.bind(this);
+    this._onFavoriteClick = this._onFavoriteClick.bind(this);
   }
 
   _onCommentsButtonClick() {
     return typeof this._onComments === `function` && this._onComments();
   }
 
+  _onAddToWatchListClick(evt) {
+    evt.preventDefault();
+    if (typeof this._onAddToWatchList === `function`) {
+      this._isWatchlist = !this._isWatchlist;
+      this._onAddToWatchList(this._isWatchlist);
+    }
+  }
+
+  _onMarkAsWatchedClick(evt) {
+    evt.preventDefault();
+    if (typeof this._onMarkAsWatched === `function`) {
+      this._isWatched = !this._isWatched;
+      this._onMarkAsWatched(this._isWatched);
+    }
+  }
+
+  _onFavoriteClick(evt) {
+    evt.preventDefault();
+    if (typeof this._onFavorite === `function`) {
+      this._isFavorite = !this._isFavorite;
+      this._onFavorite(this._isFavorite);
+    }
+  }
+
   set onCommentsClick(fn) {
     this._onComments = fn;
+  }
+
+  set onAddToWatchList(fn) {
+    this._onAddToWatchList = fn;
+  }
+
+  set onMarkAsWatched(fn) {
+    this._onMarkAsWatched = fn;
+  }
+
+  set onFavorite(fn) {
+    this._onFavorite = fn;
   }
 
   get template() {
@@ -55,18 +97,30 @@ export default class Card extends Component {
   bind() {
     this._element.querySelector(`.film-card__comments`)
       .addEventListener(`click`, this._onCommentsButtonClick);
+    this._element.querySelector(`.film-card__controls-item--add-to-watchlist`)
+      .addEventListener(`click`, this._onAddToWatchListClick);
+    this._element.querySelector(`.film-card__controls-item--mark-as-watched`)
+      .addEventListener(`click`, this._onMarkAsWatchedClick);
+    this._element.querySelector(`.film-card__controls-item--favorite`)
+      .addEventListener(`click`, this._onFavoriteClick);
   }
 
   unbind() {
     this._element.querySelector(`.film-card__comments`)
       .removeEventListener(`click`, this._onCommentsButtonClick);
+    this._element.querySelector(`.film-card__controls-item--add-to-watchlist`)
+      .removeEventListener(`click`, this._onAddToWatchListClick);
+    this._element.querySelector(`.film-card__controls-item--mark-as-watched`)
+      .removeEventListener(`click`, this._onMarkAsWatchedClick);
+    this._element.querySelector(`.film-card__controls-item--favorite`)
+      .removeEventListener(`click`, this._onFavoriteClick);
   }
 
   update(data) {
     this._comments = data.comments;
-    this._isFavourite = data.isFavourite;
     this._isWatched = data.isWatched;
     this._isWatchlist = data.isWatchlist;
+    this._isFavorite = data.isFavorite;
 
     this.unbind();
     this._partialUpdate();

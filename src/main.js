@@ -1,5 +1,5 @@
-import card from './data.js';
-import {generateFilter} from './make-filter.js';
+import {cardsData} from './data.js';
+import Filter from './filter.js';
 import Card from './card.js';
 import Popup from './popup.js';
 
@@ -7,24 +7,32 @@ import Popup from './popup.js';
 const CARDS_AMOUNT = 7;
 const EXTRA_CARDS_AMOUNT = 2;
 
+const initialCards = cardsData(CARDS_AMOUNT);
+const extraCards = cardsData(EXTRA_CARDS_AMOUNT);
+
 const filterItems = [
   {
     name: `All movies`,
-    id: `all`,
-    activeStatus: true
+    isActiveStatus: true,
+    count: initialCards.length,
   },
   {
     name: `Watchlist`,
-    id: `watchlist`,
+    count: initialCards.filter((item) => item.isInWatchlist).length,
   },
   {
     name: `History`,
-    id: `history`,
+    count: initialCards.filter((item) => item.isWatched).length,
   },
   {
     name: `Favorites`,
-    id: `Favorites`,
-  }
+    count: initialCards.filter((item) => item.isFavorite).length,
+  },
+  {
+    name: `Stats`,
+    hasCards: false,
+    isAdditional: true,
+  },
 ];
 
 const isExtra = true;
@@ -33,20 +41,45 @@ const filmsListContainer = document.querySelector(`.films-list__container`);
 const filmsListContainerCommented = document.querySelector(`.films-list__container--commented`);
 const filmsListContainerRated = document.querySelector(`.films-list__container--rated`);
 
+const filterCards = (cards, filterName) => {
+  switch (filterName) {
+    case `All`:
+      return cards;
+
+    case `Watchlist`:
+      return cards.filter((it) => it.isInWatchlist);
+
+    case `History`:
+      return cards.filter((it) => it.isWatched);
+
+    default:
+      return cards;
+  }
+};
+
 // функция для отрисовки фильтров
 const renderFilters = () => {
-  let fragment = ``;
-  filterItems.forEach((item) => {
-    fragment += generateFilter(item);
+  const fragment = document.createDocumentFragment();
+  filterItems.forEach((filterData) => {
+    const filterComponent = new Filter(filterData.name, filterData.isAdditional, filterData.hasCards, filterData.isActive, filterData.count);
+
+    filterComponent.onFilter = (evt) => {
+      const filterName = evt.target.textContent;
+      const filteredCards = filterCards(initialCards, filterName);
+
+      filmsListContainer.innerHTML = ``;
+      renderCards(filteredCards, filmsListContainer);
+    };
+    fragment.appendChild(filterComponent.render());
   });
-  mainNavigation.innerHTML = fragment;
+  mainNavigation.appendChild(fragment);
 };
 
 // функция для отрисовки карточек
-const renderCards = (amount, container, isextra) => {
+const renderCards = (cards, container, isextra) => {
   const fragment = document.createDocumentFragment();
-  for (let i = 0; i < amount; i++) {
-    const cardData = card();
+  for (let i = 0; i < cards.length; i++) {
+    const cardData = cards[i];
     const cardComponent = new Card(cardData, isextra);
     const popupComponent = new Popup(cardData);
     const body = document.querySelector(`body`);
@@ -54,6 +87,21 @@ const renderCards = (amount, container, isextra) => {
     cardComponent.onCommentsClick = () => {
       popupComponent.render();
       body.appendChild(popupComponent.element);
+    };
+
+    cardComponent.onAddToWatchListClick = (updatedState) => {
+      cardData._isWatchlist = updatedState;
+      popupComponent.update(cardData);
+    };
+
+    cardComponent.onMarkAsWatchedClick = (updatedState) => {
+      cardData._isWatched = updatedState;
+      popupComponent.update(cardData);
+    };
+
+    cardComponent.onFavoriteClick = (updatedState) => {
+      cardData._isFavorite = updatedState;
+      popupComponent.update(cardData);
     };
 
     popupComponent.onCloseClick = () => {
@@ -64,7 +112,6 @@ const renderCards = (amount, container, isextra) => {
     popupComponent.onSubmit = (updatedTaskData) => {
       cardData._comments = updatedTaskData.comments;
       cardData._userRating = updatedTaskData.userRating;
-      cardData._isFavourite = updatedTaskData.isFavourite;
       cardData._isWatched = updatedTaskData.isWatched;
       cardData._isWatchlist = updatedTaskData.isWatchlist;
 
@@ -76,23 +123,7 @@ const renderCards = (amount, container, isextra) => {
   container.appendChild(fragment);
 };
 
-// функция для добовления оброботчика событий на фильтр
-const onFilterClick = (evt) => {
-  const filterName = evt.target.closest(`.main-navigation__item`);
-  if (filterName) {
-    filmsListContainer.innerHTML = ``;
-    const id = filterName.id;
-    const cardsNumber = filterName.querySelector(`.main-navigation__item-count`).textContent;
-    renderCards(cardsNumber, filmsListContainer);
-    if (id === `#filter-all`) {
-      renderCards(CARDS_AMOUNT, filmsListContainer);
-    }
-  }
-};
-
 renderFilters();
-renderCards(CARDS_AMOUNT, filmsListContainer);
-renderCards(EXTRA_CARDS_AMOUNT, filmsListContainerCommented, isExtra);
-renderCards(EXTRA_CARDS_AMOUNT, filmsListContainerRated, isExtra);
-
-document.body.addEventListener(`click`, onFilterClick);
+renderCards(initialCards, filmsListContainer);
+renderCards(extraCards, filmsListContainerCommented, isExtra);
+renderCards(extraCards, filmsListContainerRated, isExtra);
