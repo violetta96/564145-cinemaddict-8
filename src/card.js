@@ -105,7 +105,7 @@ export default class Card extends Component {
       this._element.querySelector(`.film-card__controls-item--mark-as-watched`)
         .addEventListener(`click`, this._onMarkAsWatchedButtonClick);
     }
-    if (this._element.querySelector(`.film-card__controls-item--mark-as-watched`)) {
+    if (this._element.querySelector(`.film-card__controls-item--favorite`)) {
       this._element.querySelector(`.film-card__controls-item--favorite`)
         .addEventListener(`click`, this._onFavoriteButtonClick);
     }
@@ -122,7 +122,7 @@ export default class Card extends Component {
       this._element.querySelector(`.film-card__controls-item--mark-as-watched`)
       .removeEventListener(`click`, this._onMarkAsWatchedButtonClick);
     }
-    if (this._element.querySelector(`.film-card__controls-item--mark-as-watched`)) {
+    if (this._element.querySelector(`.film-card__controls-item--favorite`)) {
       this._element.querySelector(`.film-card__controls-item--favorite`)
       .removeEventListener(`click`, this._onFavoriteButtonClick);
     }
