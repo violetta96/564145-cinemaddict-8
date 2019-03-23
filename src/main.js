@@ -90,17 +90,17 @@ const renderCards = (cards, container, isextra) => {
     };
 
     cardComponent.onAddToWatchListClick = (updatedState) => {
-      cardData._isWatchlist = updatedState;
+      cardData.isWatchlist = updatedState;
       popupComponent.update(cardData);
     };
 
     cardComponent.onMarkAsWatchedClick = (updatedState) => {
-      cardData._isWatched = updatedState;
+      cardData.isWatched = updatedState;
       popupComponent.update(cardData);
     };
 
     cardComponent.onFavoriteClick = (updatedState) => {
-      cardData._isFavorite = updatedState;
+      cardData.isFavorite = updatedState;
       popupComponent.update(cardData);
     };
 
