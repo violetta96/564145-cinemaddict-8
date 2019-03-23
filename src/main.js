@@ -37,88 +37,92 @@ const filmsListContainerCommented = document.querySelector(`.films-list__contain
 const filmsListContainerRated = document.querySelector(`.films-list__container--rated`);
 
 const filterCards = (cards, filterName) => {
+  let filmCards;
   switch (filterName) {
     case `All`:
-      return cards;
-
+      filmCards = cards;
+      break;
     case `Watchlist`:
-      return cards.filter((it) => it.isInWatchlist);
-
+      filmCards = cards.filter((it) => it.isInWatchlist);
+      break;
     case `History`:
-      return cards.filter((it) => it.isWatched);
-
-    default:
-      return cards;
+      filmCards = cards.filter((it) => it.isWatched);
+      break;
+    case `Favorite`:
+      filmCards = cards.filter((it) => it.isFavorite);
+      break;
   }
+  return filmCards;
 };
 
 // функция для отрисовки фильтров
-const renderFilters = () => {
-  const fragment = document.createDocumentFragment();
-  filterItems.forEach((filterData) => {
-    const filterComponent = new Filter(filterData.name, filterData.isAdditional, filterData.isActive);
+filterItems.forEach((filterData) => {
+  const filterComponent = new Filter(filterData.name, filterData.isAdditional, filterData.isActive);
+  mainNavigation.appendChild(filterComponent.render());
 
-    filterComponent.onFilterClick = (filterName) => {
-      const filteredCards = filterCards(initialCards, filterName);
-
-      filmsListContainer.innerHTML = ``;
-      renderCards(filteredCards, filmsListContainer);
-    };
-    fragment.appendChild(filterComponent.render());
-  });
-  mainNavigation.appendChild(fragment);
-};
+  filterComponent.onFilterClick = (evt) => {
+    evt.preventDefault();
+    const filter = evt.target.id;
+    const target = evt.target.closest(`.main-navigation__item`);
+    const activeItem = target.parentElement.querySelector(`.main-navigation__item--active`);
+    if (filter === `all` || filter === `history` || filter === `watchlist`) {
+      filmsListContainer.forEach((card) => {
+        card.remove();
+      });
+      renderCards(filterCards(initialCards, filter), filmsListContainer);
+    }
+    if (activeItem) {
+      activeItem.classList.remove(`main-navigation__item--active`);
+    }
+    target.classList.add(`main-navigation__item--active`);
+  };
+});
 
 // функция для отрисовки карточек
-const renderCards = (cards, container, isextra) => {
-  container.innerHTML = ``;
-  const fragment = document.createDocumentFragment();
-  for (let i = 0; i < cards.length; i++) {
-    const cardData = cards[i];
-    const cardComponent = new Card(cardData, isextra);
-    const popupComponent = new Popup(cardData);
-    const body = document.querySelector(`body`);
+const renderCards = (card, container, isextra) => {
+  const cardComponent = new Card(card, isextra);
+  const popupComponent = new Popup(card);
+  const body = document.querySelector(`body`);
+  container.appendChild(cardComponent.render());
 
-    cardComponent.onCommentsClick = () => {
-      popupComponent.render();
-      body.appendChild(popupComponent.element);
-    };
+  cardComponent.onCommentsClick = () => {
+    popupComponent.render();
+    body.appendChild(popupComponent.element);
+  };
 
-    cardComponent.onAddToWatchListClick = (updatedState) => {
-      cardData.isWatchlist = updatedState;
-      popupComponent.update(cardData);
-    };
+  cardComponent.onAddToWatchListClick = (updatedState) => {
+    card.isWatchlist = updatedState;
+    popupComponent.update(card);
+  };
 
-    cardComponent.onMarkAsWatchedClick = (updatedState) => {
-      cardData.isWatched = updatedState;
-      popupComponent.update(cardData);
-    };
+  cardComponent.onMarkAsWatchedClick = (updatedState) => {
+    card.isWatched = updatedState;
+    popupComponent.update(card);
+  };
 
-    cardComponent.onFavoriteClick = (updatedState) => {
-      cardData.isFavorite = updatedState;
-      popupComponent.update(cardData);
-    };
+  cardComponent.onFavoriteClick = (updatedState) => {
+    card.isFavorite = updatedState;
+    popupComponent.update(card);
+  };
 
-    popupComponent.onCloseClick = () => {
-      body.removeChild(popupComponent.element);
-      popupComponent.unrender();
-    };
+  popupComponent.onCloseClick = () => {
+    body.removeChild(popupComponent.element);
+    popupComponent.unrender();
+  };
 
-    popupComponent.onSubmit = (updatedTaskData) => {
-      cardData._comments = updatedTaskData.comments;
-      cardData._userRating = updatedTaskData.userRating;
-      cardData._isWatched = updatedTaskData.isWatched;
-      cardData._isWatchlist = updatedTaskData.isWatchlist;
+  popupComponent.onSubmit = (updatedTaskData) => {
+    card._comments = updatedTaskData.comments;
+    card._userRating = updatedTaskData.userRating;
+    card._isWatched = updatedTaskData.isWatched;
+    card._isWatchlist = updatedTaskData.isWatchlist;
+    card._isFavorite = updatedTaskData.isFavorite;
 
-      cardComponent.update(cardData);
-    };
-
-    fragment.appendChild(cardComponent.render());
-  }
-  container.appendChild(fragment);
+    cardComponent.update(card);
+    body.removeChild(popupComponent.element);
+    popupComponent.unrender();
+  };
 };
 
-renderFilters();
-renderCards(initialCards, filmsListContainer);
-renderCards(extraCards, filmsListContainerCommented, isExtra);
-renderCards(extraCards, filmsListContainerRated, isExtra);
+initialCards.forEach((item) => renderCards(item, filmsListContainer));
+extraCards.forEach((card) => renderCards(card, filmsListContainerCommented, isExtra));
+extraCards.forEach((card) => renderCards(card, filmsListContainerRated, isExtra));

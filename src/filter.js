@@ -7,7 +7,6 @@ export default class Filter extends Component {
     this._isActiveStatus = isActiveStatus;
     this._isAdditional = isAdditional;
 
-    this._onFilter = null;
     this._onFilterButtonClick = this._onFilterButtonClick.bind(this);
   }
 
@@ -17,19 +16,8 @@ export default class Filter extends Component {
 
   _onFilterButtonClick(evt) {
     evt.preventDefault();
-    if (this._element.querySelector(`.main-navigation__item`)) {
-      const target = evt.target.closest(`.main-navigation__item`);
-      const activeItem = target.parentElement.querySelector(`.main-navigation__item--active`);
-      const filterName = evt.target.textContent;
-
-      if (typeof this._onFilter === `function`) {
-        this._onFilter(filterName);
-      }
-
-      if (activeItem) {
-        activeItem.classList.remove(`main-navigation__item--active`);
-      }
-      target.classList.add(`main-navigation__item--active`);
+    if (typeof this._onFilter === `function`) {
+      this._onFilter(evt);
     }
   }
 
@@ -40,6 +28,7 @@ export default class Filter extends Component {
   get template() {
     return `<a
             href="#${this._changeNameCase(this._name)}"
+            id="${this._name}"
             class="main-navigation__item ${this._isActiveStatus ? `main-navigation__item--active` : ``} ${this._isAdditional ? `main-navigation__item--additional` : ``}"
           >
              ${this._name}
@@ -49,9 +38,5 @@ export default class Filter extends Component {
 
   bind() {
     this._element.addEventListener(`click`, this._onFilterButtonClick);
-  }
-
-  unbind() {
-    this._element.removeEventListener(`click`, this._onFilterButtonClick);
   }
 }
