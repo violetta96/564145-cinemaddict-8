@@ -1,35 +1,36 @@
 import Component from './component.js';
 
 export default class Filter extends Component {
-  constructor(name, isAdditional = false, hasCards = true, isActiveStatus = false, count) {
+  constructor(name, isAdditional = false, isActiveStatus = false) {
     super();
     this._name = name;
-    this._count = count;
-    this._hasCards = hasCards;
     this._isActiveStatus = isActiveStatus;
     this._isAdditional = isAdditional;
 
     this._onFilter = null;
-    this._onFilterClick = this._onFilterClick.bind(this);
+    this._onFilterButtonClick = this._onFilterButtonClick.bind(this);
   }
 
-  set onFilter(fn) {
+  set onFilterClick(fn) {
     this._onFilter = fn;
   }
 
-  _onFilterClick(evt) {
+  _onFilterButtonClick(evt) {
     evt.preventDefault();
-    const target = evt.target.closest(`.main-navigation__item`);
-    const activeItem = target.parentElement.querySelector(`.main-navigation__item--active`);
+    if (this._element.querySelector(`.main-navigation__item`)) {
+      const target = evt.target.closest(`.main-navigation__item`);
+      const activeItem = target.parentElement.querySelector(`.main-navigation__item--active`);
+      const filterName = evt.target.textContent;
 
-    if (typeof this._onFilter === `function`) {
-      this._onFilter(evt);
-    }
+      if (typeof this._onFilter === `function`) {
+        this._onFilter(filterName);
+      }
 
-    if (activeItem) {
-      activeItem.classList.remove(`main-navigation__item--active`);
+      if (activeItem) {
+        activeItem.classList.remove(`main-navigation__item--active`);
+      }
+      target.classList.add(`main-navigation__item--active`);
     }
-    target.classList.add(`main-navigation__item--active`);
   }
 
   _changeNameCase(name) {
@@ -42,15 +43,15 @@ export default class Filter extends Component {
             class="main-navigation__item ${this._isActiveStatus ? `main-navigation__item--active` : ``} ${this._isAdditional ? `main-navigation__item--additional` : ``}"
           >
              ${this._name}
-             <span class="main-navigation__item-count ${!this._hasCards ? `visually-hidden` : ``}">${this._count}</span>
+             <span class="main-navigation__item-count"></span>
            </a>`.trim();
   }
 
   bind() {
-    this._element.addEventListener(`click`, this._onFilterClick);
+    this._element.addEventListener(`click`, this._onFilterButtonClick);
   }
 
   unbind() {
-    this._element.removeEventListener(`click`, this._onFilterClick);
+    this._element.removeEventListener(`click`, this._onFilterButtonClick);
   }
 }

@@ -14,23 +14,18 @@ const filterItems = [
   {
     name: `All movies`,
     isActiveStatus: true,
-    count: initialCards.length,
   },
   {
     name: `Watchlist`,
-    count: initialCards.filter((item) => item.isInWatchlist).length,
   },
   {
     name: `History`,
-    count: initialCards.filter((item) => item.isWatched).length,
   },
   {
     name: `Favorites`,
-    count: initialCards.filter((item) => item.isFavorite).length,
   },
   {
     name: `Stats`,
-    hasCards: false,
     isAdditional: true,
   },
 ];
@@ -61,10 +56,9 @@ const filterCards = (cards, filterName) => {
 const renderFilters = () => {
   const fragment = document.createDocumentFragment();
   filterItems.forEach((filterData) => {
-    const filterComponent = new Filter(filterData.name, filterData.isAdditional, filterData.hasCards, filterData.isActive, filterData.count);
+    const filterComponent = new Filter(filterData.name, filterData.isAdditional, filterData.isActive);
 
-    filterComponent.onFilter = (evt) => {
-      const filterName = evt.target.textContent;
+    filterComponent.onFilterClick = (filterName) => {
       const filteredCards = filterCards(initialCards, filterName);
 
       filmsListContainer.innerHTML = ``;
@@ -77,6 +71,7 @@ const renderFilters = () => {
 
 // функция для отрисовки карточек
 const renderCards = (cards, container, isextra) => {
+  container.innerHTML = ``;
   const fragment = document.createDocumentFragment();
   for (let i = 0; i < cards.length; i++) {
     const cardData = cards[i];
