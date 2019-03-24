@@ -8,10 +8,22 @@ export default class Filter extends Component {
     this._isAdditional = isAdditional;
 
     this._onFilterButtonClick = this._onFilterButtonClick.bind(this);
+    this._onStatsButtonClick = this._onStatsButtonClick.bind(this);
   }
 
   set onFilterClick(fn) {
     this._onFilter = fn;
+  }
+
+  set onStatsClick(fn) {
+    this._onStats = fn;
+  }
+
+  _onStatsButtonClick(evt) {
+    evt.preventDefault();
+    if (typeof this._onStats === `function`) {
+      this._onStats();
+    }
   }
 
   _onFilterButtonClick(evt) {
@@ -37,6 +49,16 @@ export default class Filter extends Component {
   }
 
   bind() {
-    this._element.addEventListener(`click`, this._onFilterButtonClick);
+    if (!this._element.classList.contains(`.main-navigation__item--additional`)) {
+      this._element.addEventListener(`click`, this._onFilterButtonClick);
+    }
+    this._element.addEventListener(`click`, this._onStatsButtonClick);
+  }
+
+  unbind() {
+    if (!this._element.classList.contains(`.main-navigation__item--additional`)) {
+      this._element.removeEventListener(`click`, this._onFilterButtonClick);
+    }
+    this._element.removeEventListener(`click`, this._onStatsButtonClick);
   }
 }

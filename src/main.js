@@ -2,6 +2,7 @@ import {cardsData} from './data.js';
 import Filter from './filter.js';
 import Card from './card.js';
 import Popup from './popup.js';
+import {drawStat} from './stat';
 
 
 const CARDS_AMOUNT = 7;
@@ -35,24 +36,22 @@ const mainNavigation = document.querySelector(`.main-navigation`);
 const filmsListContainer = document.querySelector(`.films-list__container`);
 const filmsListContainerCommented = document.querySelector(`.films-list__container--commented`);
 const filmsListContainerRated = document.querySelector(`.films-list__container--rated`);
+const films = document.querySelector(`.films`);
+const statistic = document.querySelector(`.statistic`);
 
 const filterCards = (cards, filterName) => {
-  let filmCards;
   switch (filterName) {
-    case `All`:
-      filmCards = cards;
-      break;
+    case `All movies`:
+      return cards;
     case `Watchlist`:
-      filmCards = cards.filter((it) => it.isInWatchlist);
-      break;
+      return cards.filter((it) => it.isInWatchlist);
     case `History`:
-      filmCards = cards.filter((it) => it.isWatched);
-      break;
-    case `Favorite`:
-      filmCards = cards.filter((it) => it.isFavorite);
-      break;
+      return cards.filter((it) => it.isWatched);
+    case `Favorites`:
+      return cards.filter((it) => it.isFavorite);
+    default:
+      return cards;
   }
-  return filmCards;
 };
 
 // функция для отрисовки фильтров
@@ -62,19 +61,26 @@ filterItems.forEach((filterData) => {
 
   filterComponent.onFilterClick = (evt) => {
     evt.preventDefault();
-    const filter = evt.target.id;
     const target = evt.target.closest(`.main-navigation__item`);
+    const filter = evt.target.id;
     const activeItem = target.parentElement.querySelector(`.main-navigation__item--active`);
-    if (filter === `all` || filter === `history` || filter === `watchlist`) {
-      filmsListContainer.forEach((card) => {
-        card.remove();
-      });
-      renderCards(filterCards(initialCards, filter), filmsListContainer);
+    if (filter === `All movies` || filter === `History` || filter === `Watchlist` || filter === `Favorites`) {
+      const filteredCards = filterCards(initialCards, filter);
+      statistic.classList.add(`visually-hidden`);
+      films.classList.remove(`visually-hidden`);
+      filmsListContainer.innerHTML = ``;
+      filteredCards.forEach((card) => renderCards(card, filmsListContainer));
     }
     if (activeItem) {
       activeItem.classList.remove(`main-navigation__item--active`);
     }
     target.classList.add(`main-navigation__item--active`);
+  };
+
+  filterComponent.onStatsClick = () => {
+    drawStat(initialCards);
+    statistic.classList.remove(`visually-hidden`);
+    films.classList.add(`visually-hidden`);
   };
 });
 
