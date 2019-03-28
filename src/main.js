@@ -9,25 +9,54 @@ const CARDS_AMOUNT = 7;
 const EXTRA_CARDS_AMOUNT = 2;
 
 const initialCards = cardsData(CARDS_AMOUNT);
-const extraCards = cardsData(EXTRA_CARDS_AMOUNT);
+
+const sortMostRatedCards = (extraMostRatedCards) => {
+  extraMostRatedCards.sort((a, b) => b.rating - a.rating);
+  let sortedMostRatedCards = [];
+  for (let i = 0; i < EXTRA_CARDS_AMOUNT; i++) {
+    sortedMostRatedCards.push(extraMostRatedCards[i]);
+  }
+  return sortedMostRatedCards;
+};
+
+const sortMostCommentedCards = (extraMostCommentedCards) => {
+  extraMostCommentedCards.sort((a, b) => b.comments.length - a.comments.length);
+  let sortedMostCommentedCards = [];
+  for (let i = 0; i < EXTRA_CARDS_AMOUNT; i++) {
+    sortedMostCommentedCards.push(extraMostCommentedCards[i]);
+  }
+  return sortedMostCommentedCards;
+};
+
+const mostRatedCards = sortMostRatedCards(initialCards);
+const mostCommentedCards = sortMostCommentedCards(initialCards);
+
 
 const filterItems = [
   {
     name: `All movies`,
+    id: `all`,
     isActiveStatus: true,
   },
   {
     name: `Watchlist`,
+    id: `watchlists`,
+    amount: 0,
   },
   {
     name: `History`,
+    id: `history`,
+    amount: initialCards.filter((item) => item.isWatched).length,
   },
   {
     name: `Favorites`,
+    id: `favorites`,
+    amount: initialCards.filter((item) => item.isFavorite).length
   },
   {
     name: `Stats`,
     isAdditional: true,
+    id: `stats`,
   },
 ];
 
@@ -41,48 +70,50 @@ const statistic = document.querySelector(`.statistic`);
 
 const filterCards = (cards, filterName) => {
   switch (filterName) {
-    case `All movies`:
+    case `all`:
       return cards;
-    case `Watchlist`:
+    case `watchlists`:
       return cards.filter((it) => it.isInWatchlist);
-    case `History`:
+    case `history`:
       return cards.filter((it) => it.isWatched);
-    case `Favorites`:
+    case `favorites`:
       return cards.filter((it) => it.isFavorite);
     default:
       return cards;
   }
 };
 
+const showStats = () => {
+  drawStat(initialCards);
+  statistic.classList.remove(`visually-hidden`);
+  films.classList.add(`visually-hidden`);
+};
+
+const hideStats = () => {
+  statistic.classList.add(`visually-hidden`);
+  films.classList.remove(`visually-hidden`);
+};
+
 // функция для отрисовки фильтров
-filterItems.forEach((filterData) => {
-  const filterComponent = new Filter(filterData.name, filterData.isAdditional, filterData.isActive);
-  mainNavigation.appendChild(filterComponent.render());
+const renderFilters = (items) => {
+  mainNavigation.innerHTML = ``;
+  items.forEach((filterData) => {
+    const filterComponent = new Filter(filterData.name, filterData.id, filterData.amount, filterData.isAdditional, filterData.isActive);
+    mainNavigation.appendChild(filterComponent.render());
 
-  filterComponent.onFilterClick = (evt) => {
-    evt.preventDefault();
-    const target = evt.target.closest(`.main-navigation__item`);
-    const filter = evt.target.id;
-    const activeItem = target.parentElement.querySelector(`.main-navigation__item--active`);
-    if (filter === `All movies` || filter === `History` || filter === `Watchlist` || filter === `Favorites`) {
-      const filteredCards = filterCards(initialCards, filter);
-      statistic.classList.add(`visually-hidden`);
-      films.classList.remove(`visually-hidden`);
-      filmsListContainer.innerHTML = ``;
-      filteredCards.forEach((card) => renderCards(card, filmsListContainer));
-    }
-    if (activeItem) {
-      activeItem.classList.remove(`main-navigation__item--active`);
-    }
-    target.classList.add(`main-navigation__item--active`);
-  };
-
-  filterComponent.onStatsClick = () => {
-    drawStat(initialCards);
-    statistic.classList.remove(`visually-hidden`);
-    films.classList.add(`visually-hidden`);
-  };
-});
+    filterComponent.onFilterClick = (filter) => {
+      if (filter === `all` || filter === `history` || filter === `watchlists` || filter === `favorites`) {
+        hideStats();
+        const filteredCards = filterCards(initialCards, filter);
+        filmsListContainer.innerHTML = ``;
+        filteredCards.forEach((card) => renderCards(card, filmsListContainer));
+      }
+      if (filter === `stats`) {
+        showStats();
+      }
+    };
+  });
+};
 
 // функция для отрисовки карточек
 const renderCards = (card, container, isextra) => {
@@ -92,23 +123,49 @@ const renderCards = (card, container, isextra) => {
   container.appendChild(cardComponent.render());
 
   cardComponent.onCommentsClick = () => {
-    popupComponent.render();
-    body.appendChild(popupComponent.element);
+    if (!isextra) {
+      popupComponent.render();
+      body.appendChild(popupComponent.element);
+    }
   };
 
-  cardComponent.onAddToWatchListClick = (updatedState) => {
-    card.isWatchlist = updatedState;
+  cardComponent.onWatchlistClick = () => {
+    card.isInWatchlist = !card.isInWatchlist;
+    const filterAmount = filterItems.findIndex((it) => it.id === `watchlists`);
+    const filteredCards = filterCards(initialCards, `watchlists`);
+    if (card.isInWatchlist) {
+      filterItems[filterAmount].amount = filteredCards.length;
+    } else {
+      filterItems[filterAmount].amount--;
+    }
     popupComponent.update(card);
+    renderFilters(filterItems);
   };
 
-  cardComponent.onMarkAsWatchedClick = (updatedState) => {
-    card.isWatched = updatedState;
+  cardComponent.onMarkAsWatchedClick = () => {
+    card.isWatched = !card.isWatched;
+    const filterAmount = filterItems.findIndex((it) => it.id === `history`);
+    const filteredCards = filterCards(initialCards, `history`);
+    if (card.isWatched) {
+      filterItems[filterAmount].amount = filteredCards.length;
+    } else {
+      filterItems[filterAmount].amount--;
+    }
     popupComponent.update(card);
+    renderFilters(filterItems);
   };
 
-  cardComponent.onFavoriteClick = (updatedState) => {
-    card.isFavorite = updatedState;
+  cardComponent.onFavoriteClick = () => {
+    card.isFavorite = !card.isFavorite;
+    const filterAmount = filterItems.findIndex((it) => it.id === `favorites`);
+    const filteredCards = filterCards(initialCards, `favorites`);
+    if (card.isFavorite) {
+      filterItems[filterAmount].amount = filteredCards.length;
+    } else {
+      filterItems[filterAmount].amount--;
+    }
     popupComponent.update(card);
+    renderFilters(filterItems);
   };
 
   popupComponent.onCloseClick = () => {
@@ -120,15 +177,18 @@ const renderCards = (card, container, isextra) => {
     card._comments = updatedTaskData.comments;
     card._userRating = updatedTaskData.userRating;
     card._isWatched = updatedTaskData.isWatched;
-    card._isWatchlist = updatedTaskData.isWatchlist;
+    card._isInWatchlist = updatedTaskData.isInWatchlist;
     card._isFavorite = updatedTaskData.isFavorite;
 
     cardComponent.update(card);
     body.removeChild(popupComponent.element);
     popupComponent.unrender();
+    filmsListContainerCommented.innerHTML = ``;
+    sortMostCommentedCards(initialCards).forEach((cardEx) => renderCards(cardEx, filmsListContainerCommented, isExtra));
   };
 };
 
+renderFilters(filterItems);
 initialCards.forEach((item) => renderCards(item, filmsListContainer));
-extraCards.forEach((card) => renderCards(card, filmsListContainerCommented, isExtra));
-extraCards.forEach((card) => renderCards(card, filmsListContainerRated, isExtra));
+mostRatedCards.forEach((card) => renderCards(card, filmsListContainerRated, isExtra));
+mostCommentedCards.forEach((card) => renderCards(card, filmsListContainerCommented, isExtra));

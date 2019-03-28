@@ -1,20 +1,20 @@
-import Chart from 'chart.js'
+import Chart from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 const statisticText = document.querySelectorAll(`.statistic__item-text`);
 const statisticCtx = document.querySelector(`.statistic__chart`);
-
 const drawStat = (cards) => {
-  const genresStats = getStat(cards);
   const BAR_HEIGHT = 50;
+  const genresStats = getStat(cards);
   statisticCtx.height = BAR_HEIGHT * genresStats.labels.length;
+  // eslint-disable-next-line no-unused-vars
   const myChart = new Chart(statisticCtx, {
     plugins: [ChartDataLabels],
     type: `horizontalBar`,
     data: {
       labels: genresStats.labels,
       datasets: [{
-        data: genresStats.values,
+        data: genresStats.values.slice(0, genresStats.labels.length),
         backgroundColor: `#ffe800`,
         hoverBackgroundColor: `#ffe800`,
         anchor: `start`
@@ -83,14 +83,22 @@ const getStat = (movies) => {
       }
     });
   });
-  genresStats.labels = Object.keys(genresStats).sort((a, b) => b - a);
-  genresStats.values = Object.values(genresStats).sort((a, b) => b - a);
+
+  genresStats.labels = sortObject(genresStats).map((item) => item[0]);
+  genresStats.values = sortObject(genresStats).map((item) => item[1]);
   genresStats.topGenre = genresStats.labels[0];
   genresStats.topGenreDefault = `none`;
   genresStats.totalDuration = countDuration(getTotalDuration(filteredMovies));
   genresStats.total = filteredMovies.length;
 
   return genresStats;
+};
+
+const sortObject = (obj) => {
+  const sorted = Object.entries(obj).sort((a, b) => {
+    return b[1] - a[1];
+  });
+  return sorted;
 };
 
 const countDuration = (duration) => {

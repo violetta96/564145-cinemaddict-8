@@ -153,7 +153,7 @@ export const card = () => ({
   age: getRandomItem(age),
   userRating: null,
   isWatched: false,
-  isWatchlist: false,
+  isInWatchlist: false,
   isFavorite: false,
   comments: [
     {
