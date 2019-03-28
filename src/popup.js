@@ -20,16 +20,18 @@ export default class Popup extends Component {
     this._description = data.description;
     this._comments = data.comments;
     this._userRating = data.userRating;
-    this._isFavourite = data.isFavourite;
-    this._isWatched = data.isWatched;
-    this._isWatchlist = data.isWatchlist;
 
     this._onClose = null;
     this._onSubmit = null;
+    this._isInWatchlist = data.isInWatchlist;
+    this._isWatched = data.isWatched;
+    this._isFavorite = data.isFavorite;
     this._onCloseButtonClick = this._onCloseButtonClick.bind(this);
     this._onChangeEmoji = this._onChangeEmoji.bind(this);
     this._onScoreClick = this._onScoreClick.bind(this);
     this._onCommentAdd = this._onCommentAdd.bind(this);
+    this._filmChangeWatched = this._filmChangeWatched.bind(this);
+    this._onFilmDetailsControls = this._onFilmDetailsControls.bind(this);
   }
 
   // функция для генерирования разметки
@@ -52,9 +54,9 @@ export default class Popup extends Component {
     const entry = {
       comment: {},
       userRating: ``,
-      isFavourite: ``,
+      isInWatchlist: ``,
       isWatched: ``,
-      isWatchlist: ``,
+      isFavorite: ``
     };
 
     const cardMapper = Popup.createMapper(entry);
@@ -69,7 +71,7 @@ export default class Popup extends Component {
   }
 
   _onCommentAdd(evt) {
-    if (evt.keyCode === KEYCODE_ENTER) {
+    if (evt.ctrlKey && evt.keyCode === KEYCODE_ENTER) {
       evt.preventDefault();
 
       const formData = new FormData(this._element.querySelector(`.film-details__inner`));
@@ -98,6 +100,32 @@ export default class Popup extends Component {
 
   _onScoreClick(evt) {
     if (evt.target.tagName === `INPUT`) {
+
+      const formData = new FormData(this._element.querySelector(`.film-details__inner`));
+      const updatedFormData = this._processForm(formData);
+
+      this.unbind();
+      this.update(updatedFormData);
+      this._partialUpdate();
+      this.bind();
+
+      this._onSubmit(updatedFormData);
+    }
+  }
+
+  _filmChangeWatched() {
+    this._element.querySelector(`input[name=watched]`).checked = false;
+    this._element.querySelector(`.film-details__watched-status`).classList.remove(`film-details__watched-status--active`);
+  }
+
+  _onFilmDetailsControls() {
+    const field = {
+      favorite: `isFavourite`,
+      watched: `isWatched`,
+      toWatchlist: `inInWatchlist`};
+
+    if (field) {
+      this[field] = !this[field];
 
       const formData = new FormData(this._element.querySelector(`.film-details__inner`));
       const updatedFormData = this._processForm(formData);
@@ -170,7 +198,7 @@ export default class Popup extends Component {
               </tr>
               <tr class="film-details__row">
                 <td class="film-details__term">Runtime</td>
-                <td class="film-details__cell">${60 * (this._duration.hour) + this._duration.min}m</td>
+                <td class="film-details__cell">${this._duration}m</td>
               </tr>
               <tr class="film-details__row">
                 <td class="film-details__term">Country</td>
@@ -191,7 +219,7 @@ export default class Popup extends Component {
         </div>
 
         <section class="film-details__controls">
-          <input type="checkbox" class="film-details__control-input visually-hidden" id="watchlist" name="watchlist" ${this._isWatchlist ? `checked` : ``}>
+          <input type="checkbox" class="film-details__control-input visually-hidden" id="watchlist" name="watchlist" ${this._isInWatchlist ? `checked` : ``}>
           <label for="watchlist" class="film-details__control-label film-details__control-label--watchlist">Add to watchlist</label>
 
           <input type="checkbox" class="film-details__control-input visually-hidden" id="watched" name="watched" ${this._isWatched ? `checked` : ``}>
@@ -242,7 +270,7 @@ export default class Popup extends Component {
 
         <section class="film-details__user-rating-wrap">
           <div class="film-details__user-rating-controls">
-            <span class="film-details__watched-status film-details__watched-status${this._isWatched ? `--active` : ``}">Already watched</span>
+            <span class="film-details__watched-status ${this._isWatched ? `film-details__watched-status--active` : ``}">Already watched</span>
             <button class="film-details__watched-reset" type="button">undo</button>
           </div>
 
@@ -275,6 +303,10 @@ export default class Popup extends Component {
       .addEventListener(`keydown`, this._onCommentAdd);
     this._element.querySelector(`.film-details__emoji-list`)
       .addEventListener(`change`, this._onChangeEmoji);
+    this.element.querySelector(`.film-details__watched-reset`)
+      .addEventListener(`click`, this._filmChangeWatched);
+    this._element.querySelector(`.film-details__controls`)
+      .addEventListener(`change`, this._onFilmDetailsControls);
   }
 
   unbind() {
@@ -286,13 +318,17 @@ export default class Popup extends Component {
       .removeEventListener(`keydown`, this._onCommentAdd);
     this._element.querySelector(`.film-details__emoji-list`)
       .removeEventListener(`change`, this._onChangeEmoji);
+    this.element.querySelector(`.film-details__watched-reset`)
+      .removeEventListener(`click`, this._filmChangeWatched);
+    this._element.querySelector(`.film-details__controls`)
+      .removeEventListener(`change`, this._onFilmDetailsControls);
   }
 
   update(data) {
     this._userRating = data.userRating;
-    this._isFavourite = data.isFavourite;
     this._isWatched = data.isWatched;
-    this._isWatchlist = data.isWatchlist;
+    this._isInWatchlist = data.isInWatchlist;
+    this._isFavorite = data.isFavorite;
   }
 
   static createMapper(target) {
@@ -306,19 +342,28 @@ export default class Popup extends Component {
       'score': (value) => {
         target.userRating = value;
       },
-      'favorite': (value) => {
-        if (value === `on`) {
-          target.isFavourite = true;
-        }
-      },
       'watched': (value) => {
         if (value === `on`) {
           target.isWatched = true;
         }
+        if (value === ``) {
+          target.isWatched = false;
+        }
       },
       'watchlist': (value) => {
         if (value === `on`) {
-          target.isWatchlist = true;
+          target.isInWatchlist = true;
+        }
+        if (value === ``) {
+          target.isInWatchlist = false;
+        }
+      },
+      'favorite': (value) => {
+        if (value === `on`) {
+          target.isFavourite = true;
+        }
+        if (value === ``) {
+          target.isFavourite = false;
         }
       },
     };
