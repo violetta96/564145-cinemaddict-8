@@ -30,6 +30,7 @@ export default class Popup extends Component {
     this._onClose = null;
     this._onComment = null;
     this._onScore = null;
+    this._onFilmDetails = null;
     this._onCloseButtonClick = this._onCloseButtonClick.bind(this);
     this._onChangeEmoji = this._onChangeEmoji.bind(this);
     this._onScoreClick = this._onScoreClick.bind(this);
@@ -80,6 +81,10 @@ export default class Popup extends Component {
 
   set onClose(fn) {
     this._onClose = fn;
+  }
+
+  set onFilmDetails(fn) {
+    this._onFilmDetails = fn;
   }
 
   set onScore(fn) {
@@ -178,7 +183,7 @@ export default class Popup extends Component {
       this._partialUpdate();
       this.bind();
 
-      this._onClose(updatedFormData);
+      this._onFilmDetails(updatedFormData);
     }
   }
 
@@ -395,12 +400,12 @@ export default class Popup extends Component {
 
   shake() {
     const ANIMATION_TIMEOUT = 600;
-    this._element.animation = `shake ${ANIMATION_TIMEOUT / 1000}s`;
-    this._element.style.border = `2px solid red`;
+    this._element.querySelector(`.film-details`).animation = `shake ${ANIMATION_TIMEOUT / 1000}s`;
+    this._element.querySelector(`.film-details`).style.border = `2px solid red`;
 
     setTimeout(() => {
-      this._element.style.animation = ``;
-      this._element.style.border = ``;
+      this._element.querySelector(`.film-details`).style.animation = ``;
+      this._element.querySelector(`.film-details`).style.border = ``;
     }, ANIMATION_TIMEOUT);
   }
 

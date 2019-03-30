@@ -133,7 +133,7 @@ const showInitialAmount = (ini, name) => {
 const renderFilters = (items, initialFilterCards) => {
   mainNavigation.innerHTML = ``;
   items.forEach((filterData) => {
-    const filterComponent = new Filter(filterData.name, filterData.id, filterData.amount, filterData.isAdditional, filterData.isActive);
+    const filterComponent = new Filter(filterData.name, filterData.id, filterData.amount, filterData.isAdditional, filterData.isActiveStatus);
     mainNavigation.appendChild(filterComponent.render());
     showInitialAmount(initialFilterCards, `history`);
     showInitialAmount(initialFilterCards, `watchlists`);
@@ -142,7 +142,6 @@ const renderFilters = (items, initialFilterCards) => {
     filterComponent.onFilterClick = (filter) => {
       if (filter === `all` || filter === `history` || filter === `watchlists` || filter === `favorites`) {
         hideStats();
-        renderFilters(filterItems, initialCards);
         const filteredCards = filterCards(initialFilterCards, filter);
         filmsListContainer.innerHTML = ``;
         filteredCards.forEach((card) => renderCards(card, filmsListContainer));
@@ -242,6 +241,20 @@ const renderCards = (card, container, initialCard, isextra) => {
           });
   };
 
+  popupComponent.onFilmDetails = (updatedTaskData) => {
+    const updatedMovie = updateCards(card, updatedTaskData);
+
+    filmsAPI.updateFilm({id: updatedMovie.id, data: updatedMovie.toRAW()})
+          .then((newCard) => {
+            cardComponent.update(newCard);
+            popupComponent.update(newCard);
+            popupComponent.rerender();
+          })
+          .catch(() => {
+            popupComponent.shake();
+          });
+  };
+
   popupComponent.onScore = (newScore) => {
     const scoreInputs = popupComponent.element.querySelectorAll(`.film-details__user-rating-input`);
     card.userRating = newScore.userRating;
@@ -269,6 +282,7 @@ const renderCards = (card, container, initialCard, isextra) => {
             popupComponent.unrender();
             filmsListContainerCommented.innerHTML = ``;
             sortMostCommentedCards(initialCard).forEach((cardEx) => renderCards(cardEx, filmsListContainerCommented, isExtra));
+            renderFilters(filterItems, initialCard);
           })
           .catch(() => {
             popupComponent.shake();

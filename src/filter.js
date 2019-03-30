@@ -19,11 +19,11 @@ export default class Filter extends Component {
   _onFilterButtonClick(evt) {
     evt.preventDefault();
     if (typeof this._onFilter === `function`) {
-      const target = evt.currentTarget;
+      const target = evt.target.closest(`.main-navigation__item`);
       const filter = evt.target.id;
       const activeItem = target.parentElement.querySelector(`.main-navigation__item--active`);
       if (activeItem) {
-        target.classList.remove(`main-navigation__item--active`);
+        activeItem.classList.remove(`main-navigation__item--active`);
       }
       target.classList.add(`main-navigation__item--active`);
       this._onFilter(filter);
