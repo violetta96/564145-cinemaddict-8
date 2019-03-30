@@ -1,8 +1,10 @@
 import Component from './component.js';
+import moment from 'moment';
 
 export default class Card extends Component {
   constructor(data, isExtra) {
     super();
+    this._id = data.id;
     this._title = data.title;
     this._rating = data.rating;
     this._releaseDate = data.releaseDate;
@@ -10,12 +12,11 @@ export default class Card extends Component {
     this._genre = data.genre;
     this._picture = data.picture;
     this._description = data.description;
+    this._isWatched = data.isWatched;
+    this._isInWatchlist = data.isInWatchlist;
+    this._isFavorite = data.isFavorite;
     this._comments = data.comments;
     this._isExtra = isExtra;
-    this._isInWatchlist = data.isInWatchlist;
-    this._isWatched = data.isWatched;
-    this._isFavorite = data.isFavorite;
-
     this._onComments = null;
     this._onWatchlist = null;
     this._onMarkAsWatched = null;
@@ -77,18 +78,34 @@ export default class Card extends Component {
     return arr;
   }
 
+  _separateGenre(initialGenres) {
+    let genres = [];
+    genres = Array.from(initialGenres).join(`, `);
+    return genres.split(`,`, 1);
+  }
+
+  _getGenreItems(items) {
+    let newArray = [...items];
+    return newArray;
+  }
+
+  _firstLatterChange(string) {
+    string = string[0].toUpperCase() + string.substring(1);
+    return string;
+  }
+
   get template() {
-    const [hours, mins] = this._countDuration(this._duration);
+    // const [hours, mins] = this._countDuration(this._duration);
     return `<article class="film-card ${this._isExtra ? `film-card--no-controls` : ``}">
               <h3 class="film-card__title">${this._title}</h3>
               <p class="film-card__rating">${this._rating}</p>
               <p class="film-card__info">
-                <span class="film-card__year">${this._releaseDate.match(/\d{4}/)}</span>
-                <span class="film-card__duration">${hours}h&nbsp;${mins}m</span>
-                <span class="film-card__genre">${this._genre[0]}</span>
+                <span class="film-card__year">${moment(this._releaseDate).format(`YYYY`)}</span>
+                <span class="film-card__duration">${moment.duration(this._duration).hours()}h&nbsp;${moment.duration(this._duration).minutes()}m</span>
+                <span class="film-card__genre">${this._getGenreItems(this._genre)[0] ? this._getGenreItems(this._genre)[0] : `None` }</span>
               </p>
-              <img src="./images/posters/${this._picture}.jpg" alt="${this._picture}" class="film-card__poster">
-              <p class="film-card__description">${this._description}</p>
+              <img src="./images/posters/${this._picture}.jpg" alt="${this._title}" class="film-card__poster">
+              <p class="film-card__description">${this._firstLatterChange(this._description)}</p>
               <button class="film-card__comments">${this._comments.length} comments</button>
               ${!this._isExtra ? `<form class="film-card__controls">
                 <button class="film-card__controls-item button film-card__controls-item--add-to-watchlist"><!--Add to watchlist--> WL</button>
@@ -129,10 +146,13 @@ export default class Card extends Component {
   }
 
   update(data) {
-    this._comments = data.comments;
+    if (data.comments) {
+      this._comments = data.comments;
+    }
     this._isWatched = data.isWatched;
     this._isInWatchlist = data.isInWatchlist;
     this._isFavorite = data.isFavorite;
+    this._userRating = data.userRating;
 
     this.unbind();
     this._partialUpdate();

@@ -1,5 +1,6 @@
 import Chart from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
+import moment from 'moment';
 
 const statisticText = document.querySelectorAll(`.statistic__item-text`);
 const statisticCtx = document.querySelector(`.statistic__chart`);
@@ -64,9 +65,9 @@ const drawStat = (cards) => {
       }
     }
   });
-  const [hours, mins] = genresStats.totalDuration;
+  // const [hours, mins] = genresStats.totalDuration;
   statisticText[0].innerHTML = `${genresStats.total }<span class="statistic__item-description">movies</span>`;
-  statisticText[1].innerHTML = `${hours}<span class="statistic__item-description">h</span>${mins}<span class="statistic__item-description">m</span>`;
+  statisticText[1].innerHTML = `${moment.duration(genresStats.totalDuration).hours()}<span class="statistic__item-description">h</span>${moment.duration(genresStats.totalDuration).minutes()}<span class="statistic__item-description">m</span>`;
   statisticText[2].innerHTML = `${genresStats.topGenre ? genresStats.topGenre : genresStats.topGenreDefault}`;
 };
 
@@ -88,7 +89,7 @@ const getStat = (movies) => {
   genresStats.values = sortObject(genresStats).map((item) => item[1]);
   genresStats.topGenre = genresStats.labels[0];
   genresStats.topGenreDefault = `none`;
-  genresStats.totalDuration = countDuration(getTotalDuration(filteredMovies));
+  genresStats.totalDuration = getTotalDuration(filteredMovies);
   genresStats.total = filteredMovies.length;
 
   return genresStats;
@@ -99,13 +100,6 @@ const sortObject = (obj) => {
     return b[1] - a[1];
   });
   return sorted;
-};
-
-const countDuration = (duration) => {
-  const hour = Math.floor(duration / 60);
-  const min = duration - hour * 60;
-  const arr = [hour, min];
-  return arr;
 };
 
 const getTotalDuration = (movies) => {

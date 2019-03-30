@@ -1,14 +1,41 @@
-import {cardsData} from './data.js';
+// import {cardsData} from './data.js';
 import Filter from './filter.js';
 import Card from './card.js';
 import Popup from './popup.js';
 import {drawStat} from './stat';
+import API from './api';
+// import ModelFilm from './model-card';
 
+const APIconfig = {
+  endPoint: `https://es8-demo-srv.appspot.com/moowle/`,
+  authorization: `Basic eo0w590ik29889a`
+};
+const filmsAPI = new API(APIconfig);
+const isExtra = true;
+const mainNavigation = document.querySelector(`.main-navigation`);
+const filmsListContainer = document.querySelector(`.films-list__container`);
+const filmsListTitle = document.querySelector(`.films-list__title`);
+const filmsListContainerCommented = document.querySelector(`.films-list__container--commented`);
+const filmsListContainerRated = document.querySelector(`.films-list__container--rated`);
+const films = document.querySelector(`.films`);
+const statistic = document.querySelector(`.statistic`);
 
-const CARDS_AMOUNT = 7;
+let initialCards = [];
+
+const showFilmsTitleError = (text) => {
+  filmsListTitle.textContent = text;
+  filmsListTitle.classList.remove(`visually-hidden`);
+};
+
+const hideFilmsTitleError = () => {
+  filmsListTitle.textContent = ` Loading movies...`;
+  filmsListTitle.classList.add(`visually-hidden`);
+};
+
 const EXTRA_CARDS_AMOUNT = 2;
 
-const initialCards = cardsData(CARDS_AMOUNT);
+// const mostRatedCards = sortMostRatedCards(initialCards);
+// const mostCommentedCards = sortMostCommentedCards(initialCards);
 
 const sortMostRatedCards = (extraMostRatedCards) => {
   extraMostRatedCards.sort((a, b) => b.rating - a.rating);
@@ -28,10 +55,6 @@ const sortMostCommentedCards = (extraMostCommentedCards) => {
   return sortedMostCommentedCards;
 };
 
-const mostRatedCards = sortMostRatedCards(initialCards);
-const mostCommentedCards = sortMostCommentedCards(initialCards);
-
-
 const filterItems = [
   {
     name: `All movies`,
@@ -46,12 +69,12 @@ const filterItems = [
   {
     name: `History`,
     id: `history`,
-    amount: initialCards.filter((item) => item.isWatched).length,
+    amount: 0,
   },
   {
     name: `Favorites`,
     id: `favorites`,
-    amount: initialCards.filter((item) => item.isFavorite).length
+    amount: 0,
   },
   {
     name: `Stats`,
@@ -60,13 +83,19 @@ const filterItems = [
   },
 ];
 
-const isExtra = true;
-const mainNavigation = document.querySelector(`.main-navigation`);
-const filmsListContainer = document.querySelector(`.films-list__container`);
-const filmsListContainerCommented = document.querySelector(`.films-list__container--commented`);
-const filmsListContainerRated = document.querySelector(`.films-list__container--rated`);
-const films = document.querySelector(`.films`);
-const statistic = document.querySelector(`.statistic`);
+filmsAPI.getFilms()
+    .then((inCards) => {
+      hideFilmsTitleError();
+      initialCards = inCards;
+      initialCards.forEach((item) => renderCards(item, filmsListContainer, initialCards));
+      sortMostRatedCards(initialCards).forEach((card) => renderCards(card, filmsListContainerRated, initialCards, isExtra));
+      sortMostCommentedCards(initialCards).forEach((card) => renderCards(card, filmsListContainerCommented, initialCards, isExtra));
+      renderFilters(filterItems, initialCards);
+      return initialCards;
+    })
+    .catch(() => {
+      showFilmsTitleError(`Something went wrong while loading movies. Check your connection or try again later`);
+    });
 
 const filterCards = (cards, filterName) => {
   switch (filterName) {
@@ -94,17 +123,27 @@ const hideStats = () => {
   films.classList.remove(`visually-hidden`);
 };
 
+const showInitialAmount = (ini, name) => {
+  const filterAmount = filterItems.findIndex((it) => it.id === name);
+  const filteredinitialCards = filterCards(ini, name);
+  filterItems[filterAmount].amount = filteredinitialCards.length;
+};
+
 // функция для отрисовки фильтров
-const renderFilters = (items) => {
+const renderFilters = (items, initialFilterCards) => {
   mainNavigation.innerHTML = ``;
   items.forEach((filterData) => {
     const filterComponent = new Filter(filterData.name, filterData.id, filterData.amount, filterData.isAdditional, filterData.isActive);
     mainNavigation.appendChild(filterComponent.render());
+    showInitialAmount(initialFilterCards, `history`);
+    showInitialAmount(initialFilterCards, `watchlists`);
+    showInitialAmount(initialFilterCards, `favorites`);
 
     filterComponent.onFilterClick = (filter) => {
       if (filter === `all` || filter === `history` || filter === `watchlists` || filter === `favorites`) {
         hideStats();
-        const filteredCards = filterCards(initialCards, filter);
+        renderFilters(filterItems, initialCards);
+        const filteredCards = filterCards(initialFilterCards, filter);
         filmsListContainer.innerHTML = ``;
         filteredCards.forEach((card) => renderCards(card, filmsListContainer));
       }
@@ -115,8 +154,17 @@ const renderFilters = (items) => {
   });
 };
 
+const updateCards = (updatedCards, newCards) => {
+  for (const key of Object.keys(newCards)) {
+    if (key in updatedCards) {
+      updatedCards[key] = newCards[key];
+    }
+  }
+  return updatedCards;
+};
+
 // функция для отрисовки карточек
-const renderCards = (card, container, isextra) => {
+const renderCards = (card, container, initialCard, isextra) => {
   const cardComponent = new Card(card, isextra);
   const popupComponent = new Popup(card);
   const body = document.querySelector(`body`);
@@ -138,8 +186,11 @@ const renderCards = (card, container, isextra) => {
     } else {
       filterItems[filterAmount].amount--;
     }
-    popupComponent.update(card);
-    renderFilters(filterItems);
+    filmsAPI.updateFilm({id: card.id, data: card.toRAW()})
+        .then((newCard) => {
+          popupComponent.update(newCard);
+        });
+    renderFilters(filterItems, initialCards);
   };
 
   cardComponent.onMarkAsWatchedClick = () => {
@@ -151,8 +202,11 @@ const renderCards = (card, container, isextra) => {
     } else {
       filterItems[filterAmount].amount--;
     }
-    popupComponent.update(card);
-    renderFilters(filterItems);
+    filmsAPI.updateFilm({id: card.id, data: card.toRAW()})
+        .then((newCard) => {
+          popupComponent.update(newCard);
+        });
+    renderFilters(filterItems, initialCards);
   };
 
   cardComponent.onFavoriteClick = () => {
@@ -164,31 +218,64 @@ const renderCards = (card, container, isextra) => {
     } else {
       filterItems[filterAmount].amount--;
     }
-    popupComponent.update(card);
-    renderFilters(filterItems);
+    filmsAPI.updateFilm({id: card.id, data: card.toRAW()})
+        .then((newCard) => {
+          popupComponent.update(newCard);
+        });
+    renderFilters(filterItems, initialCards);
   };
 
-  popupComponent.onCloseClick = () => {
-    body.removeChild(popupComponent.element);
-    popupComponent.unrender();
+  popupComponent.onComment = (newComment) => {
+    card.comments.push(newComment.comment);
+
+    filmsAPI.updateFilm({id: card.id, data: card.toRAW()})
+          .then((newCard) => {
+            cardComponent.update(newCard);
+            popupComponent.update(newCard);
+            popupComponent.rerender();
+            popupComponent.commentSuccess();
+          })
+          .catch(() => {
+            card.comments.pop();
+            popupComponent.shake();
+            popupComponent.commentError();
+          });
   };
 
-  popupComponent.onSubmit = (updatedTaskData) => {
-    card._comments = updatedTaskData.comments;
-    card._userRating = updatedTaskData.userRating;
-    card._isWatched = updatedTaskData.isWatched;
-    card._isInWatchlist = updatedTaskData.isInWatchlist;
-    card._isFavorite = updatedTaskData.isFavorite;
+  popupComponent.onScore = (newScore) => {
+    const scoreInputs = popupComponent.element.querySelectorAll(`.film-details__user-rating-input`);
+    card.userRating = newScore.userRating;
 
-    cardComponent.update(card);
-    body.removeChild(popupComponent.element);
-    popupComponent.unrender();
-    filmsListContainerCommented.innerHTML = ``;
-    sortMostCommentedCards(initialCards).forEach((cardEx) => renderCards(cardEx, filmsListContainerCommented, isExtra));
+    filmsAPI.updateFilm({id: card.id, data: card.toRAW()})
+          .then((newCard) => {
+            popupComponent.scoreSuccess(scoreInputs);
+            cardComponent.update(newCard);
+            popupComponent.update(newCard);
+            popupComponent.rerender();
+          })
+          .catch(() => {
+            popupComponent.scoreError(scoreInputs);
+            popupComponent.shake();
+          });
+  };
+
+  popupComponent.onClose = (updatedTaskData) => {
+    const updatedMovie = updateCards(card, updatedTaskData);
+
+    filmsAPI.updateFilm({id: updatedMovie.id, data: updatedMovie.toRAW()})
+          .then((newCard) => {
+            cardComponent.update(newCard);
+            body.removeChild(popupComponent.element);
+            popupComponent.unrender();
+            filmsListContainerCommented.innerHTML = ``;
+            sortMostCommentedCards(initialCard).forEach((cardEx) => renderCards(cardEx, filmsListContainerCommented, isExtra));
+          })
+          .catch(() => {
+            popupComponent.shake();
+          });
   };
 };
 
-renderFilters(filterItems);
-initialCards.forEach((item) => renderCards(item, filmsListContainer));
-mostRatedCards.forEach((card) => renderCards(card, filmsListContainerRated, isExtra));
-mostCommentedCards.forEach((card) => renderCards(card, filmsListContainerCommented, isExtra));
+// initialCards.forEach((item) => renderCards(item, filmsListContainer));
+// mostRatedCards.forEach((card) => renderCards(card, filmsListContainerRated, isExtra));
+// mostCommentedCards.forEach((card) => renderCards(card, filmsListContainerCommented, isExtra));

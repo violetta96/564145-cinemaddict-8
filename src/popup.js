@@ -6,26 +6,30 @@ const KEYCODE_ENTER = 13;
 export default class Popup extends Component {
   constructor(data) {
     super();
+    this._id = data.id;
     this._title = data.title;
+    this._titleOriginal = data.titleOriginal;
     this._rating = data.rating;
     this._releaseDate = data.releaseDate;
     this._duration = data.duration;
     this._genre = data.genre;
     this._picture = data.picture;
-    this._age = data.age;
+    this._description = data.description;
     this._director = data.director;
-    this._writer = data.writer;
+    this._writers = data.writers;
     this._actors = data.actors;
     this._country = data.country;
-    this._description = data.description;
+    this._age = data.age;
+
+    this._isWatched = data.isWatched;
+    this._isInWatchlist = data.isInWatchlist;
+    this._isFavorite = data.isFavorite;
+    this._userRating = null;
     this._comments = data.comments;
-    this._userRating = data.userRating;
 
     this._onClose = null;
-    this._onSubmit = null;
-    this._isInWatchlist = data.isInWatchlist;
-    this._isWatched = data.isWatched;
-    this._isFavorite = data.isFavorite;
+    this._onComment = null;
+    this._onScore = null;
     this._onCloseButtonClick = this._onCloseButtonClick.bind(this);
     this._onChangeEmoji = this._onChangeEmoji.bind(this);
     this._onScoreClick = this._onScoreClick.bind(this);
@@ -34,30 +38,72 @@ export default class Popup extends Component {
     this._onFilmDetailsControls = this._onFilmDetailsControls.bind(this);
   }
 
+  _changeEmoji(emojiName) {
+    switch (emojiName) {
+      case `sleeping`:
+        return `😴`;
+      case `grinning`:
+        return `😀`;
+      case `neutral-face`:
+        return `😐`;
+      default:
+        return `None`;
+    }
+  }
+
   // функция для генерирования разметки
   _getScoreHTML() {
     let fragment = ``;
-    for (let i = 1; i < 10; i++) {
-      fragment += `
-      <input type="radio" name="score" class="film-details__user-rating-input visually-hidden" value="${i}" id="rating-${i}" ${i === +this._userRating ? `checked` : ``}>
-      <label class="film-details__user-rating-label" for="rating-${i}">${i}</label>
-      `;
+    for (let i = 1; i <= 10; i++) {
+      fragment += `<input type="radio" name="score" class="film-details__user-rating-input visually-hidden" value="${i}" id="rating-${i}" ${i === +this._userRating ? `checked` : ``}>
+      <label class="film-details__user-rating-label" for="rating-${i}">${i}</label>`;
     }
     return fragment;
+  }
+
+  _getCommentsTemplate() {
+    return this._comments.map((comment) => `<li class="film-details__comment">
+         <span class="film-details__comment-emoji">${this._changeEmoji(comment.emotion)}</span>
+         <div>
+           <p class="film-details__comment-text">${this._firstLatterChange(comment.comment)}</p>
+           <p class="film-details__comment-info">
+             <span class="film-details__comment-author">${comment.author}</span>
+             <span class="film-details__comment-day">${moment(comment.date).fromNow()}</span>
+           </p>
+         </div>
+       </li>`).join(``);
   }
 
   _partialUpdate() {
     this._element.innerHTML = this.template;
   }
 
+  set onClose(fn) {
+    this._onClose = fn;
+  }
+
+  set onScore(fn) {
+    this._onScore = fn;
+  }
+
+  set onComment(fn) {
+    this._onComment = fn;
+  }
+
   _processForm(formData) {
     const entry = {
-      comment: {},
-      userRating: ``,
-      isInWatchlist: ``,
+      isFavourite: ``,
       isWatched: ``,
-      isFavorite: ``
+      isWatchlist: ``,
+      userRating: ``,
+      comment: {
+        author: `User`,
+        emotion: ``,
+        comment: ``,
+        date: new Date(),
+      },
     };
+
 
     const cardMapper = Popup.createMapper(entry);
 
@@ -73,23 +119,12 @@ export default class Popup extends Component {
   _onCommentAdd(evt) {
     if (evt.ctrlKey && evt.keyCode === KEYCODE_ENTER) {
       evt.preventDefault();
-
       const formData = new FormData(this._element.querySelector(`.film-details__inner`));
-      const updatedFormData = this._processForm(formData);
+      const newData = this._processForm(formData);
 
-      this._comments.push({
-        author: `User`,
-        date: new Date(),
-        text: updatedFormData.comment.text,
-        emoji: this._element.querySelector(`.film-details__emoji-item:checked + label`).textContent,
-      });
-
-      this.unbind();
-      this.update(updatedFormData);
-      this._partialUpdate();
-      this.bind();
-
-      this._onSubmit(updatedFormData);
+      if (typeof this._onComment === `function`) {
+        this._onComment(newData);
+      }
     }
   }
 
@@ -100,16 +135,13 @@ export default class Popup extends Component {
 
   _onScoreClick(evt) {
     if (evt.target.tagName === `INPUT`) {
-
       const formData = new FormData(this._element.querySelector(`.film-details__inner`));
-      const updatedFormData = this._processForm(formData);
+      const newData = this._processForm(formData);
+      this.update(newData);
 
-      this.unbind();
-      this.update(updatedFormData);
-      this._partialUpdate();
-      this.bind();
-
-      this._onSubmit(updatedFormData);
+      if (typeof this._onScore === `function`) {
+        this._onScore(newData);
+      }
     }
   }
 
@@ -118,9 +150,20 @@ export default class Popup extends Component {
     this._element.querySelector(`.film-details__watched-status`).classList.remove(`film-details__watched-status--active`);
   }
 
+  _onCloseButtonClick() {
+    const formData = new FormData(this._element.querySelector(`.film-details__inner`));
+    const newData = this._processForm(formData);
+
+    this.update(newData);
+
+    if (typeof this._onClose === `function`) {
+      this._onClose(newData);
+    }
+  }
+
   _onFilmDetailsControls() {
     const field = {
-      favorite: `isFavourite`,
+      favorite: `isFavorite`,
       watched: `isWatched`,
       toWatchlist: `inInWatchlist`};
 
@@ -135,22 +178,26 @@ export default class Popup extends Component {
       this._partialUpdate();
       this.bind();
 
-      this._onSubmit(updatedFormData);
+      this._onClose(updatedFormData);
     }
   }
 
-  _onCloseButtonClick() {
-    if (typeof this._onClose === `function`) {
-      this._onClose();
-    }
+
+  _countDuration(duration) {
+    const hour = moment.duration(duration).hours();
+    const min = moment.duration(duration).minutes();
+    const time = (hour * 60) + min;
+    return time;
   }
 
-  set onCloseClick(fn) {
-    this._onClose = fn;
+  _getGenreItems(items) {
+    let newArray = [...items];
+    return newArray;
   }
 
-  set onSubmit(fn) {
-    this._onSubmit = fn;
+  _firstLatterChange(string) {
+    string = string[0].toUpperCase() + string.substring(1);
+    return string;
   }
 
   get template() {
@@ -161,7 +208,7 @@ export default class Popup extends Component {
         </div>
         <div class="film-details__info-wrap">
           <div class="film-details__poster">
-            <img class="film-details__poster-img" src="images/posters/${this._picture}.jpg" alt="${this._picture}">
+            <img class="film-details__poster-img" src="images/posters/${this._picture}.jpg" alt="${this._title}">
 
             <p class="film-details__age">${this._age}+</p>
           </div>
@@ -170,12 +217,12 @@ export default class Popup extends Component {
             <div class="film-details__info-head">
               <div class="film-details__title-wrap">
                 <h3 class="film-details__title">${this._title}</h3>
-                <p class="film-details__title-original">Original: ${this._title}</p>
+                <p class="film-details__title-original">Original: ${this._titleOriginal}</p>
               </div>
 
               <div class="film-details__rating">
                 <p class="film-details__total-rating">${this._rating}</p>
-                ${this._userRating ? `<p class="film-details__user-rating">Your rate ${this._userRating}</p>` : ``}
+                <p class="film-details__user-rating">Your rate ${this._userRating || `No rate`}</p>
               </div>
             </div>
 
@@ -186,19 +233,19 @@ export default class Popup extends Component {
               </tr>
               <tr class="film-details__row">
                 <td class="film-details__term">Writers</td>
-                <td class="film-details__cell">${this._writer}</td>
+                <td class="film-details__cell">${Array.from(this._writers).join(`, `)}</td>
               </tr>
               <tr class="film-details__row">
                 <td class="film-details__term">Actors</td>
-                <td class="film-details__cell">${this._actors}</td>
+                <td class="film-details__cell">${Array.from(this._actors).join(`, `)}</td>
               </tr>
               <tr class="film-details__row">
                 <td class="film-details__term">Release Date</td>
-                <td class="film-details__cell">${this._releaseDate} (${this._country})</td>
+                <td class="film-details__cell">${moment(this._releaseDate).format(`DD MMMM YYYY`)} (${this._country})</td>
               </tr>
               <tr class="film-details__row">
                 <td class="film-details__term">Runtime</td>
-                <td class="film-details__cell">${this._duration}m</td>
+                <td class="film-details__cell">${this._countDuration(this._duration)}m</td>
               </tr>
               <tr class="film-details__row">
                 <td class="film-details__term">Country</td>
@@ -207,13 +254,15 @@ export default class Popup extends Component {
               <tr class="film-details__row">
                 <td class="film-details__term">Genres</td>
                 <td class="film-details__cell">
-                ${this._genre.map((genre) => `
+                ${this._getGenreItems(this._genre).map((genre) => `
                   <span class="film-details__genre">${genre}</span>`).join(``)}
+                  <span class="film-details__genre ${this._getGenreItems(this._genre) ? `hidden` : ``}">None</span>
+                </td>
               </tr>
             </table>
 
             <p class="film-details__film-description">
-              ${this._description}
+              ${this._firstLatterChange(this._description)}
             </p>
           </div>
         </div>
@@ -233,17 +282,7 @@ export default class Popup extends Component {
           <h3 class="film-details__comments-title">Comments <span class="film-details__comments-count">${this._comments.length}</span></h3>
 
           <ul class="film-details__comments-list">
-            ${this._comments.map((comment) => `
-            <li class="film-details__comment">
-              <span class="film-details__comment-emoji">${comment.emoji}</span>
-              <div>
-                <p class="film-details__comment-text">${comment.text}</p>
-                <p class="film-details__comment-info">
-                  <span class="film-details__comment-author">${comment.author}</span>
-                  <span class="film-details__comment-day">${moment(comment.data).format(`MMMM Do YYYY, h:mm`)}</span>
-                </p>
-              </div>
-            </li>`).join(``)}
+             ${this._getCommentsTemplate()}
           </ul>
 
           <div class="film-details__new-comment">
@@ -276,7 +315,7 @@ export default class Popup extends Component {
 
           <div class="film-details__user-score">
             <div class="film-details__user-rating-poster">
-              <img src="images/posters/${this._picture}.jpg" alt="${this._picture}" class="film-details__user-rating-img">
+              <img src="images/posters/${this._picture}.jpg" alt="${this._title}" class="film-details__user-rating-img">
             </div>
 
             <section class="film-details__user-rating-inner">
@@ -325,19 +364,53 @@ export default class Popup extends Component {
   }
 
   update(data) {
-    this._userRating = data.userRating;
+    if (data.comments) {
+      this._comments = data.comments;
+    }
     this._isWatched = data.isWatched;
     this._isInWatchlist = data.isInWatchlist;
     this._isFavorite = data.isFavorite;
+    this._userRating = data.userRating;
+  }
+
+  commentSuccess() {
+    this._element.querySelector(`.film-details__comment-input`).disabled = false;
+  }
+
+  commentError() {
+    this._element.querySelector(`.film-details__comment-input`).disabled = true;
+  }
+
+  scoreSuccess(inputs) {
+    Array.from(inputs).forEach((it) => {
+      it.disabled = false;
+    });
+  }
+
+  scoreError(inputs) {
+    Array.from(inputs).forEach((it) => {
+      it.disabled = true;
+    });
+  }
+
+  shake() {
+    const ANIMATION_TIMEOUT = 600;
+    this._element.animation = `shake ${ANIMATION_TIMEOUT / 1000}s`;
+    this._element.style.border = `2px solid red`;
+
+    setTimeout(() => {
+      this._element.style.animation = ``;
+      this._element.style.border = ``;
+    }, ANIMATION_TIMEOUT);
   }
 
   static createMapper(target) {
     return {
       'comment': (value) => {
-        target.comment.text = value;
+        target.comment.comment = value;
       },
       'comment-emoji': (value) => {
-        target.comment.emoji = value;
+        target.comment.emotion = value;
       },
       'score': (value) => {
         target.userRating = value;
@@ -360,10 +433,10 @@ export default class Popup extends Component {
       },
       'favorite': (value) => {
         if (value === `on`) {
-          target.isFavourite = true;
+          target.isFavorite = true;
         }
         if (value === ``) {
-          target.isFavourite = false;
+          target.isFavorite = false;
         }
       },
     };
