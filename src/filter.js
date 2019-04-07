@@ -1,13 +1,13 @@
 import Component from './component.js';
 
 export default class Filter extends Component {
-  constructor(name, id, amount, isAdditional = false, isActiveStatus = false) {
+  constructor(data) {
     super();
-    this._name = name;
-    this._id = id;
-    this._amount = amount;
-    this._isActiveStatus = isActiveStatus;
-    this._isAdditional = isAdditional;
+    this._name = data.name;
+    this._id = data.id;
+    this._showAmount = data.showAmount;
+    this._isActiveStatus = data.isActiveStatus;
+    this._isAdditional = data.isAdditional;
 
     this._onFilterButtonClick = this._onFilterButtonClick.bind(this);
   }
@@ -41,7 +41,7 @@ export default class Filter extends Component {
             class="main-navigation__item ${this._isActiveStatus ? `main-navigation__item--active` : ``} ${this._isAdditional ? `main-navigation__item--additional` : ``}"
           >
              ${this._name}
-             ${this._amount ? `<span class="main-navigation__item-count">${this._amount}</span>` : ` `}
+             ${this._showAmount ? `<span class="main-navigation__item-count"></span>` : ` `}
            </a>`.trim();
   }
 

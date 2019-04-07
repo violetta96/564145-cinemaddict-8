@@ -2,12 +2,13 @@ import Chart from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import moment from 'moment';
 
+const BAR_HEIGHT = 50;
+
 const statisticText = document.querySelectorAll(`.statistic__item-text`);
 const statisticCtx = document.querySelector(`.statistic__chart`);
 const drawStat = (cards) => {
-  const BAR_HEIGHT = 50;
   const genresStats = getStat(cards);
-  statisticCtx.height = BAR_HEIGHT * genresStats.labels.length;
+  statisticCtx.height = BAR_HEIGHT * genresStats.labels.length + 50;
   // eslint-disable-next-line no-unused-vars
   const myChart = new Chart(statisticCtx, {
     plugins: [ChartDataLabels],
@@ -15,7 +16,7 @@ const drawStat = (cards) => {
     data: {
       labels: genresStats.labels,
       datasets: [{
-        data: genresStats.values.slice(0, genresStats.labels.length),
+        data: genresStats.values,
         backgroundColor: `#ffe800`,
         hoverBackgroundColor: `#ffe800`,
         anchor: `start`
@@ -61,21 +62,43 @@ const drawStat = (cards) => {
         display: false
       },
       tooltips: {
-        enabled: false
-      }
+        enabled: false,
+      },
     }
   });
-  // const [hours, mins] = genresStats.totalDuration;
   statisticText[0].innerHTML = `${genresStats.total }<span class="statistic__item-description">movies</span>`;
-  statisticText[1].innerHTML = `${moment.duration(genresStats.totalDuration).hours()}<span class="statistic__item-description">h</span>${moment.duration(genresStats.totalDuration).minutes()}<span class="statistic__item-description">m</span>`;
+  statisticText[1].innerHTML = `${Math.floor(genresStats.totalDuration / 60)}
+                                <span class="statistic__item-description">h</span>
+                                ${(genresStats.totalDuration - Math.floor(genresStats.totalDuration / 60) * 60)}
+                                <span class="statistic__item-description">m</span>`;
   statisticText[2].innerHTML = `${genresStats.topGenre ? genresStats.topGenre : genresStats.topGenreDefault}`;
 };
 
+const filterDateWatched = (cards, filter) => {
+  switch (filter) {
+    case `statistic-all-time`:
+      return cards;
+
+    case `statistic-today`:
+      return cards.filter((it) => moment(it.dateWatched, `DD-MM-YYYY`).format(`DD-MM-YYYY`) === moment().format(`DD-MM-YYYY`));
+
+    case `statistic-week`:
+      return cards.filter((it) => moment(it.dateWatched, `DD-MM-YYYY`) > moment().subtract(1, `week`));
+
+    case `statistic-month`:
+      return cards.filter((it) => moment(it.dateWatched, `DD-MM-YYYY`) > moment().subtract(1, `month`));
+
+    case `statistic-year`:
+      return cards.filter((it) => moment(it.dateWatched, `DD-MM-YYYY`) > moment().subtract(1, `year`));
+
+    default:
+      return cards;
+  }
+};
 
 const getStat = (movies) => {
   const genresStats = {};
-  const filteredMovies = movies.filter((movie) => movie.isWatched);
-  filteredMovies.forEach((movie) => {
+  movies.forEach((movie) => {
     movie.genre.forEach((value) => {
       if (genresStats.hasOwnProperty(value)) {
         genresStats[value]++;
@@ -84,13 +107,13 @@ const getStat = (movies) => {
       }
     });
   });
-
-  genresStats.labels = sortObject(genresStats).map((item) => item[0]);
-  genresStats.values = sortObject(genresStats).map((item) => item[1]);
+  const sortedGenresStats = sortObject(genresStats);
+  genresStats.labels = sortedGenresStats.map((item) => item[0]);
+  genresStats.values = sortedGenresStats.map((item) => item[1]);
   genresStats.topGenre = genresStats.labels[0];
   genresStats.topGenreDefault = `none`;
-  genresStats.totalDuration = getTotalDuration(filteredMovies);
-  genresStats.total = filteredMovies.length;
+  genresStats.totalDuration = getTotalDuration(movies);
+  genresStats.total = movies.length;
 
   return genresStats;
 };
@@ -108,4 +131,5 @@ const getTotalDuration = (movies) => {
   }, 0);
 };
 
-export {drawStat};
+
+export {drawStat, filterDateWatched};

@@ -19,11 +19,11 @@ export default class Card extends Component {
     this._isExtra = isExtra;
     this._onComments = null;
     this._onWatchlist = null;
-    this._onMarkAsWatched = null;
+    this._onsWatched = null;
     this._onFavorite = null;
     this._onCommentsButtonClick = this._onCommentsButtonClick.bind(this);
-    this._onAddInWatchlistButtonClick = this._onAddInWatchlistButtonClick.bind(this);
-    this._onMarkAsWatchedButtonClick = this._onMarkAsWatchedButtonClick.bind(this);
+    this._onWatchlistButtonClick = this._onWatchlistButtonClick.bind(this);
+    this._onWatchedButtonClick = this._onWatchedButtonClick.bind(this);
     this._onFavoriteButtonClick = this._onFavoriteButtonClick.bind(this);
   }
 
@@ -31,7 +31,7 @@ export default class Card extends Component {
     return typeof this._onComments === `function` && this._onComments();
   }
 
-  _onAddInWatchlistButtonClick(evt) {
+  _onWatchlistButtonClick(evt) {
     evt.preventDefault();
     if (typeof this._onWatchlist === `function`) {
       this.isInWatchlist = !this.isInWatchlist;
@@ -39,11 +39,11 @@ export default class Card extends Component {
     }
   }
 
-  _onMarkAsWatchedButtonClick(evt) {
+  _onWatchedButtonClick(evt) {
     evt.preventDefault();
-    if (typeof this._onMarkAsWatched === `function`) {
+    if (typeof this._onWatched === `function`) {
       this.isWatched = !this.isWatched;
-      this._onMarkAsWatched();
+      this._onWatched();
     }
   }
 
@@ -63,49 +63,25 @@ export default class Card extends Component {
     this._onWatchlist = fn;
   }
 
-  set onMarkAsWatchedClick(fn) {
-    this._onMarkAsWatched = fn;
+  set onWatchedClick(fn) {
+    this._onWatched = fn;
   }
 
   set onFavoriteClick(fn) {
     this._onFavorite = fn;
   }
 
-  _countDuration(duration) {
-    const hour = Math.floor(duration / 60);
-    const min = duration - hour * 60;
-    const arr = [hour, min];
-    return arr;
-  }
-
-  _separateGenre(initialGenres) {
-    let genres = [];
-    genres = Array.from(initialGenres).join(`, `);
-    return genres.split(`,`, 1);
-  }
-
-  _getGenreItems(items) {
-    let newArray = [...items];
-    return newArray;
-  }
-
-  _firstLatterChange(string) {
-    string = string[0].toUpperCase() + string.substring(1);
-    return string;
-  }
-
   get template() {
-    // const [hours, mins] = this._countDuration(this._duration);
     return `<article class="film-card ${this._isExtra ? `film-card--no-controls` : ``}">
               <h3 class="film-card__title">${this._title}</h3>
               <p class="film-card__rating">${this._rating}</p>
               <p class="film-card__info">
                 <span class="film-card__year">${moment(this._releaseDate).format(`YYYY`)}</span>
-                <span class="film-card__duration">${moment.duration(this._duration).hours()}h&nbsp;${moment.duration(this._duration).minutes()}m</span>
-                <span class="film-card__genre">${this._getGenreItems(this._genre)[0] ? this._getGenreItems(this._genre)[0] : `None` }</span>
+                <span class="film-card__duration">${moment.utc(moment.duration(this._duration, `minutes`).asMilliseconds()).format(`h[h] m[m]`)}</span>
+                <span class="film-card__genre ${![...this._genre].length ? `visually-hidden` : ``}">${[...this._genre][0]}</span>
               </p>
-              <img src="./images/posters/${this._picture}.jpg" alt="${this._title}" class="film-card__poster">
-              <p class="film-card__description">${this._firstLatterChange(this._description)}</p>
+              <img src="${this._picture}" alt="${this._title}" class="film-card__poster">
+              <p class="film-card__description ${this._description.length > 2 ? `` : `visually-hidden`}">${this._description}</p>
               <button class="film-card__comments">${this._comments.length} comments</button>
               ${!this._isExtra ? `<form class="film-card__controls">
                 <button class="film-card__controls-item button film-card__controls-item--add-to-watchlist"><!--Add to watchlist--> WL</button>
@@ -124,9 +100,9 @@ export default class Card extends Component {
       .addEventListener(`click`, this._onCommentsButtonClick);
     if (!this._isExtra) {
       this._element.querySelector(`.film-card__controls-item--add-to-watchlist`)
-      .addEventListener(`click`, this._onAddInWatchlistButtonClick);
+      .addEventListener(`click`, this._onWatchlistButtonClick);
       this._element.querySelector(`.film-card__controls-item--mark-as-watched`)
-      .addEventListener(`click`, this._onMarkAsWatchedButtonClick);
+      .addEventListener(`click`, this._onWatchedButtonClick);
       this._element.querySelector(`.film-card__controls-item--favorite`)
       .addEventListener(`click`, this._onFavoriteButtonClick);
     }
@@ -137,9 +113,9 @@ export default class Card extends Component {
       .removeEventListener(`click`, this._onCommentsButtonClick);
     if (!this._isExtra) {
       this._element.querySelector(`.film-card__controls-item--add-to-watchlist`)
-      .removeEventListener(`click`, this._onAddInWatchlistButtonClick);
+      .removeEventListener(`click`, this._onWatchlistButtonClick);
       this._element.querySelector(`.film-card__controls-item--mark-as-watched`)
-      .removeEventListener(`click`, this._onMarkAsWatchedButtonClick);
+      .removeEventListener(`click`, this._onWatchedButtonClick);
       this._element.querySelector(`.film-card__controls-item--favorite`)
       .removeEventListener(`click`, this._onFavoriteButtonClick);
     }
