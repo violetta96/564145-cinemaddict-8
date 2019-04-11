@@ -33,6 +33,23 @@ export default class ModelFilm {
   toRAW() {
     return {
       'id': this.id,
+      'film_info': {
+        'title': this.title,
+        'alternative_title': this.titleOriginal,
+        'total_rating': this.rating,
+        'release': {
+          'date': this.releaseDate,
+          'release_country': this.country,
+        },
+        'runtime': this.duration,
+        'genre': [...this.genre.values()],
+        'poster': this.picture,
+        'description': this.description,
+        'actors': this.actors,
+        'director': this.director,
+        'writers': this.writers,
+        'age_rating': this.age,
+      },
       'user_details': {
         'already_watched': this.isWatched,
         'watchlist': this.isInWatchlist,
