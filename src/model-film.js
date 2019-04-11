@@ -19,6 +19,7 @@ export default class ModelFilm {
     this.isFavorite = Boolean(data[`user_details`][`favorite`]);
     this.userRating = parseFloat(data[`user_details`][`personal_rating`]).toFixed();
     this.comments = data[`comments`] || [];
+    this.dateWatched = data[`user_details`][`watching_date`];
   }
 
   static parseFilm(data) {

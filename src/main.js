@@ -3,7 +3,8 @@ import Filter from './filter.js';
 import Card from './card.js';
 import Search from './search.js';
 import Popup from './popup.js';
-import {drawStat, filterDateWatched} from './stat';
+// import {drawStat, filterDateWatched} from './stat';
+import Statistic from './stat.js';
 import API from './api';
 import Provider from './provider.js';
 import Store from './store.js';
@@ -19,6 +20,7 @@ const api = new API({endPoint: END_POINT, authorization: AUTHORIZATION});
 const store = new Store({key: FILMS_STORE_KEY, storage: localStorage});
 const provider = new Provider({api, store});
 const isExtra = true;
+const main = document.querySelector(`.main`);
 const mainNavigation = document.querySelector(`.main-navigation`);
 const films = document.querySelector(`.films`);
 const filmsListContainer = films.querySelector(`.films-list__container`);
@@ -26,8 +28,6 @@ const filmsListTitle = films.querySelector(`.films-list__title`);
 const filmsListContainerCommented = films.querySelector(`.films-list__container--commented`);
 const filmsListContainerRated = films.querySelector(`.films-list__container--rated`);
 const filmsListShowMore = films.querySelector(`.films-list__show-more`);
-const statistic = document.querySelector(`.statistic`);
-const statisticFiltersInput = statistic.querySelectorAll(`.statistic__filters-input`);
 const profileRating = document.querySelector(`.profile__rating`);
 const footerStatistics = document.querySelector(`.footer__statistics__info`);
 const headerSearch = document.querySelector(`.header__search`);
@@ -74,10 +74,6 @@ const sortMostCommentedCards = (extraMostCommentedCards) => {
   return sortedMostCommentedCards;
 };
 
-const getRandomInt = (min, max) => {
-  return Math.floor(Math.random() * (max - min + 1) + min);
-};
-
 const filterItems = [
   {
     name: `All movies`,
@@ -115,21 +111,15 @@ const filterIdNames = {
 };
 
 const showStats = (cardsData) => {
-  statistic.classList.remove(`visually-hidden`);
   films.classList.add(`visually-hidden`);
-  const filteredWatchedMovies = cardsData.filter((it) => it.isWatched);
-  drawStat(filteredWatchedMovies);
-};
-
-const onStatisticFilters = (evt) => {
-  const filter = evt.target.id;
-  const filteredDateWatchedMovies = cards.filter((it) => it.dateWatched);
-  const filteredWatchedMoviesPress = filterDateWatched(filteredDateWatchedMovies, filter);
-  drawStat(filteredWatchedMoviesPress);
+  const statisticComponent = new Statistic(cardsData);
+  main.appendChild(statisticComponent.render());
 };
 
 const hideStats = () => {
-  statistic.classList.add(`visually-hidden`);
+  if (document.querySelector(`.statistic`)) {
+    main.removeChild(document.querySelector(`.statistic`));
+  }
   films.classList.remove(`visually-hidden`);
 };
 
@@ -222,7 +212,7 @@ const renderCard = (card, container, cardsData, isextra) => {
   cardComponent.onWatchedClick = () => {
     card.isWatched = !card.isWatched;
     if (card.isWatched) {
-      card.dateWatched = moment().format(`DD-MM-YYYY`);
+      card.dateWatched = moment().format(`D MMMM YYYY`);
     }
     provider.updateFilm({id: card.id, data: card.toRAW()})
           .then((newCard) => {
@@ -292,7 +282,7 @@ const renderCard = (card, container, cardsData, isextra) => {
   popupComponent.onWatchedClick = () => {
     card.isWatched = !card.isWatched;
     if (card.isWatched) {
-      card.dateWatched = moment().format(`DD-MM-YYYY`);
+      card.dateWatched = moment().format(`D MMMM YYYY`);
     }
     provider.updateFilm({id: card.id, data: card.toRAW()})
           .then((newCard) => {
@@ -374,13 +364,6 @@ const renderCards = (cardsDataFiltered, cardsData, isCardsData) => {
   }
 };
 
-const addDateWatched = (cardsToAddDate) => {
-  const filteredWatchedMovies = cardsToAddDate.filter((card) => card.isWatched);
-  return filteredWatchedMovies.forEach((it) => {
-    it.dateWatched = `${getRandomInt(1, 30)}-${getRandomInt(1, 12)}-${getRandomInt(2015, 2019)}`;
-  });
-};
-
 const renderSearch = (cardsData) => {
   const searchComponent = new Search();
   searchComponent.onSearchInput = (inputValue) => {
@@ -409,7 +392,6 @@ provider.getFilms()
     sortMostRatedCards(initialCardsData).forEach((card) => renderCard(card, filmsListContainerRated, initialCardsData, isExtra));
     sortMostCommentedCards(initialCardsData).forEach((card) => renderCard(card, filmsListContainerCommented, initialCardsData, isExtra));
     renderFilters(filterItems, initialCardsData);
-    addDateWatched(initialCardsData);
     renderSearch(initialCardsData);
     profileRatingChange(initialCardsData);
     showInitialFilmsCount(initialCardsData);
@@ -418,7 +400,6 @@ provider.getFilms()
       renderCards(filteredCards, initialCardsData, isNotFilteredCards);
     });
     cards = initialCardsData;
-    statisticFiltersInput.forEach((item) => item.addEventListener(`click`, onStatisticFilters));
   })
   .catch(() => {
     showFilmsTitleError(LOADING_ERROR);
