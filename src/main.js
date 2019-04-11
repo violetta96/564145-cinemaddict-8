@@ -5,14 +5,19 @@ import Search from './search.js';
 import Popup from './popup.js';
 import {drawStat, filterDateWatched} from './stat';
 import API from './api';
+import Provider from './provider.js';
+import Store from './store.js';
 
 const END_POINT = `https://es8-demo-srv.appspot.com/moowle/`;
+const FILMS_STORE_KEY = `films-store-key`;
 const AUTHORIZATION = `Basic eo0w590ik29889a`;
 const LOADING_ERROR = `Something went wrong while loading movies. Check your connection or try again later`;
 const EXTRA_CARDS_AMOUNT = 2;
 const CARDS_AMOUNT = 5;
 
-const filmsAPI = new API({endPoint: END_POINT, authorization: AUTHORIZATION});
+const api = new API({endPoint: END_POINT, authorization: AUTHORIZATION});
+const store = new Store({key: FILMS_STORE_KEY, storage: localStorage});
+const provider = new Provider({api, store});
 const isExtra = true;
 const mainNavigation = document.querySelector(`.main-navigation`);
 const films = document.querySelector(`.films`);
@@ -26,6 +31,15 @@ const statisticFiltersInput = statistic.querySelectorAll(`.statistic__filters-in
 const profileRating = document.querySelector(`.profile__rating`);
 const footerStatistics = document.querySelector(`.footer__statistics__info`);
 const headerSearch = document.querySelector(`.header__search`);
+
+window.addEventListener(`offline`, () => {
+  document.title = `${document.title}[OFFLINE]`;
+});
+
+window.addEventListener(`online`, () => {
+  document.title = document.title.split(`[OFFLINE]`)[0];
+  provider.syncFilms();
+});
 
 let filteredCards = [];
 let cards = [];
@@ -198,7 +212,7 @@ const renderCard = (card, container, cardsData, isextra) => {
 
   cardComponent.onWatchlistClick = () => {
     card.isInWatchlist = !card.isInWatchlist;
-    filmsAPI.updateFilm({id: card.id, data: card.toRAW()})
+    provider.updateFilm({id: card.id, data: card.toRAW()})
           .then((newCard) => {
             popupComponent.update(newCard);
           });
@@ -210,7 +224,7 @@ const renderCard = (card, container, cardsData, isextra) => {
     if (card.isWatched) {
       card.dateWatched = moment().format(`DD-MM-YYYY`);
     }
-    filmsAPI.updateFilm({id: card.id, data: card.toRAW()})
+    provider.updateFilm({id: card.id, data: card.toRAW()})
           .then((newCard) => {
             popupComponent.update(newCard);
           });
@@ -220,7 +234,7 @@ const renderCard = (card, container, cardsData, isextra) => {
 
   cardComponent.onFavoriteClick = () => {
     card.isFavorite = !card.isFavorite;
-    filmsAPI.updateFilm({id: card.id, data: card.toRAW()})
+    provider.updateFilm({id: card.id, data: card.toRAW()})
           .then((newCard) => {
             popupComponent.update(newCard);
           });
@@ -234,7 +248,7 @@ const renderCard = (card, container, cardsData, isextra) => {
     card.comments.push(newComment.comment);
     popupComponent.commentBlock();
 
-    filmsAPI.updateFilm({id: card.id, data: card.toRAW()})
+    provider.updateFilm({id: card.id, data: card.toRAW()})
             .then((newCard) => {
               cardComponent.update(newCard);
               popupComponent.update(newCard);
@@ -252,7 +266,7 @@ const renderCard = (card, container, cardsData, isextra) => {
 
   popupComponent.onDelete = () => {
     card.comments.pop();
-    filmsAPI.updateFilm({id: card.id, data: card.toRAW()})
+    provider.updateFilm({id: card.id, data: card.toRAW()})
             .then((newCard) => {
               cardComponent.update(newCard);
               popupComponent.update(newCard);
@@ -266,7 +280,7 @@ const renderCard = (card, container, cardsData, isextra) => {
 
   popupComponent.onWatchlistClick = () => {
     card.isInWatchlist = !card.isInWatchlist;
-    filmsAPI.updateFilm({id: card.id, data: card.toRAW()})
+    provider.updateFilm({id: card.id, data: card.toRAW()})
           .then((newCard) => {
             cardComponent.update(newCard);
             popupComponent.update(newCard);
@@ -280,7 +294,7 @@ const renderCard = (card, container, cardsData, isextra) => {
     if (card.isWatched) {
       card.dateWatched = moment().format(`DD-MM-YYYY`);
     }
-    filmsAPI.updateFilm({id: card.id, data: card.toRAW()})
+    provider.updateFilm({id: card.id, data: card.toRAW()})
           .then((newCard) => {
             cardComponent.update(newCard);
             popupComponent.update(newCard);
@@ -292,7 +306,7 @@ const renderCard = (card, container, cardsData, isextra) => {
 
   popupComponent.onFavoriteClick = () => {
     card.isFavorite = !card.isFavorite;
-    filmsAPI.updateFilm({id: card.id, data: card.toRAW()})
+    provider.updateFilm({id: card.id, data: card.toRAW()})
           .then((newCard) => {
             cardComponent.update(newCard);
             popupComponent.update(newCard);
@@ -306,7 +320,7 @@ const renderCard = (card, container, cardsData, isextra) => {
     card.userRating = newScore;
     popupComponent.scoreBlock(scoreInputs);
 
-    filmsAPI.updateFilm({id: card.id, data: card.toRAW()})
+    provider.updateFilm({id: card.id, data: card.toRAW()})
             .then((newCard) => {
               popupComponent.scoreUnblock(scoreInputs);
               cardComponent.update(newCard);
@@ -388,7 +402,7 @@ const renderSearch = (cardsData) => {
   headerSearch.appendChild(searchComponent.render());
 };
 
-filmsAPI.getFilms()
+provider.getFilms()
   .then((initialCardsData) => {
     hideFilmsTitleError();
     renderCards(filteredCards, initialCardsData, isNotFilteredCards);
