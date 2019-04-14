@@ -30,13 +30,9 @@ export default class Filter extends Component {
     }
   }
 
-  _changeNameCase(name) {
-    return name.toLowerCase();
-  }
-
   get template() {
     return `<a
-            href="#${this._changeNameCase(this._name)}"
+            href="#${this._name}"
             id="${this._id}"
             class="main-navigation__item ${this._isActiveStatus ? `main-navigation__item--active` : ``} ${this._isAdditional ? `main-navigation__item--additional` : ``}"
           >

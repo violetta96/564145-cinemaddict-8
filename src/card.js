@@ -1,6 +1,8 @@
 import Component from './component.js';
 import moment from 'moment';
 
+const MAX_LENGTH_DESCRIPTION = 140;
+
 export default class Card extends Component {
   constructor(data, isExtra) {
     super();
@@ -16,6 +18,7 @@ export default class Card extends Component {
     this._isInWatchlist = data.isInWatchlist;
     this._isFavorite = data.isFavorite;
     this._comments = data.comments;
+    this._dateWatched = data.dateWatched;
     this._isExtra = isExtra;
     this._onComments = null;
     this._onWatchlist = null;
@@ -25,34 +28,6 @@ export default class Card extends Component {
     this._onWatchlistButtonClick = this._onWatchlistButtonClick.bind(this);
     this._onWatchedButtonClick = this._onWatchedButtonClick.bind(this);
     this._onFavoriteButtonClick = this._onFavoriteButtonClick.bind(this);
-  }
-
-  _onCommentsButtonClick() {
-    return typeof this._onComments === `function` && this._onComments();
-  }
-
-  _onWatchlistButtonClick(evt) {
-    evt.preventDefault();
-    if (typeof this._onWatchlist === `function`) {
-      this.isInWatchlist = !this.isInWatchlist;
-      this._onWatchlist();
-    }
-  }
-
-  _onWatchedButtonClick(evt) {
-    evt.preventDefault();
-    if (typeof this._onWatched === `function`) {
-      this.isWatched = !this.isWatched;
-      this._onWatched();
-    }
-  }
-
-  _onFavoriteButtonClick(evt) {
-    evt.preventDefault();
-    if (typeof this._onFavorite === `function`) {
-      this.isFavorite = !this.isFavorite;
-      this._onFavorite();
-    }
   }
 
   set onCommentsClick(fn) {
@@ -81,7 +56,7 @@ export default class Card extends Component {
                 <span class="film-card__genre ${![...this._genre].length ? `visually-hidden` : ``}">${[...this._genre][0]}</span>
               </p>
               <img src="${this._picture}" alt="${this._title}" class="film-card__poster">
-              <p class="film-card__description ${this._description.length > 2 ? `` : `visually-hidden`}">${this._description}</p>
+              <p class="film-card__description">${this._description.substring(0, MAX_LENGTH_DESCRIPTION) + `...`}</p>
               <button class="film-card__comments">${this._comments.length} comments</button>
               ${!this._isExtra ? `<form class="film-card__controls">
                 <button class="film-card__controls-item button film-card__controls-item--add-to-watchlist"><!--Add to watchlist--> WL</button>
@@ -91,9 +66,54 @@ export default class Card extends Component {
            </article>`.trim();
   }
 
+  _onCommentsButtonClick() {
+    return typeof this._onComments === `function` && this._onComments();
+  }
+
+
+  _changeDescriptionLenght(description) {
+    return description.substring(0, MAX_LENGTH_DESCRIPTION);
+  }
+
+  _onWatchlistButtonClick(evt) {
+    evt.preventDefault();
+    if (typeof this._onWatchlist === `function`) {
+      this._onWatchlist();
+    }
+  }
+
+  _onWatchedButtonClick(evt) {
+    evt.preventDefault();
+    if (typeof this._onWatched === `function`) {
+      this._onWatched();
+    }
+  }
+
+  _onFavoriteButtonClick(evt) {
+    evt.preventDefault();
+    if (typeof this._onFavorite === `function`) {
+      this._onFavorite();
+    }
+  }
+
   _partialUpdate() {
     this._element.innerHTML = this.template;
   }
+
+  update(data) {
+    if (data.comments) {
+      this._comments = data.comments;
+    }
+    this._isWatched = data.isWatched;
+    this._isInWatchlist = data.isInWatchlist;
+    this._isFavorite = data.isFavorite;
+    this._userRating = data.userRating;
+
+    this.unbind();
+    this._partialUpdate();
+    this.bind();
+  }
+
 
   bind() {
     this._element.querySelector(`.film-card__comments`)
@@ -119,19 +139,5 @@ export default class Card extends Component {
       this._element.querySelector(`.film-card__controls-item--favorite`)
       .removeEventListener(`click`, this._onFavoriteButtonClick);
     }
-  }
-
-  update(data) {
-    if (data.comments) {
-      this._comments = data.comments;
-    }
-    this._isWatched = data.isWatched;
-    this._isInWatchlist = data.isInWatchlist;
-    this._isFavorite = data.isFavorite;
-    this._userRating = data.userRating;
-
-    this.unbind();
-    this._partialUpdate();
-    this.bind();
   }
 }
