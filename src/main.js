@@ -1,9 +1,7 @@
-import moment from 'moment';
 import Filter from './filter.js';
 import Card from './card.js';
 import Search from './search.js';
 import Popup from './popup.js';
-// import {drawStat, filterDateWatched} from './stat';
 import Statistic from './stat.js';
 import API from './api';
 import Provider from './provider.js';
@@ -13,15 +11,36 @@ const END_POINT = `https://es8-demo-srv.appspot.com/moowle/`;
 const FILMS_STORE_KEY = `films-store-key`;
 const AUTHORIZATION = `Basic eo0w590ik29889a`;
 const LOADING_ERROR = `Something went wrong while loading movies. Check your connection or try again later`;
-const EXTRA_CARDS_AMOUNT = 2;
+const LOADING_MOVIES = `Loading movies...`;
 const CARDS_AMOUNT = 5;
 
+const FilterIdNames = {
+  WATCHLIST: `watchlists`,
+  HISTORY: `history`,
+  FAVORITES: `favorites`,
+};
+
+const ProfileRatingNames = {
+  NOVICE: `novice`,
+  FAN: `fan`,
+  BUFF: `movie buff`,
+};
+
+const ProfileRatingAmount = {
+  NOVICE: `11`,
+  FAN: `20`,
+};
+
+let filteredCards = [];
+let cards = [];
+let isNotFilteredCards = true;
+let cardsCounter = 0;
 const api = new API({endPoint: END_POINT, authorization: AUTHORIZATION});
 const store = new Store({key: FILMS_STORE_KEY, storage: localStorage});
 const provider = new Provider({api, store});
 const isExtra = true;
 const main = document.querySelector(`.main`);
-const mainNavigation = document.querySelector(`.main-navigation`);
+const mainNavigation = main.querySelector(`.main-navigation`);
 const films = document.querySelector(`.films`);
 const filmsListContainer = films.querySelector(`.films-list__container`);
 const filmsListTitle = films.querySelector(`.films-list__title`);
@@ -31,6 +50,10 @@ const filmsListShowMore = films.querySelector(`.films-list__show-more`);
 const profileRating = document.querySelector(`.profile__rating`);
 const footerStatistics = document.querySelector(`.footer__statistics__info`);
 const headerSearch = document.querySelector(`.header__search`);
+const statisticComponent = new Statistic(cards);
+const searchComponent = new Search();
+main.appendChild(statisticComponent.render());
+statisticComponent.hideStatistic();
 
 window.addEventListener(`offline`, () => {
   document.title = `${document.title}[OFFLINE]`;
@@ -41,37 +64,22 @@ window.addEventListener(`online`, () => {
   provider.syncFilms();
 });
 
-let filteredCards = [];
-let cards = [];
-let isNotFilteredCards = true;
-let cardsCounter = 0;
-
 const showFilmsTitleError = (text) => {
   filmsListTitle.textContent = text;
   filmsListTitle.classList.remove(`visually-hidden`);
 };
 
 const hideFilmsTitleError = () => {
-  filmsListTitle.textContent = ` Loading movies...`;
+  filmsListTitle.textContent = LOADING_MOVIES;
   filmsListTitle.classList.add(`visually-hidden`);
 };
 
-const sortMostRatedCards = (extraMostRatedCards) => {
-  extraMostRatedCards.sort((a, b) => b.rating - a.rating);
-  let sortedMostRatedCards = [];
-  for (let i = 0; i < EXTRA_CARDS_AMOUNT; i++) {
-    sortedMostRatedCards.push(extraMostRatedCards[i]);
-  }
-  return sortedMostRatedCards;
+const sortMostRatedCards = (extraCards) => {
+  return [...extraCards].sort((a, b) => b.rating - a.rating);
 };
 
-const sortMostCommentedCards = (extraMostCommentedCards) => {
-  extraMostCommentedCards.sort((a, b) => b.comments.length - a.comments.length);
-  let sortedMostCommentedCards = [];
-  for (let i = 0; i < EXTRA_CARDS_AMOUNT; i++) {
-    sortedMostCommentedCards.push(extraMostCommentedCards[i]);
-  }
-  return sortedMostCommentedCards;
+const sortMostCommentedCards = (extraCards) => {
+  return [...extraCards].sort((a, b) => b.comments.length - a.comments.length);
 };
 
 const filterItems = [
@@ -104,47 +112,21 @@ const filterItems = [
   },
 ];
 
-const filterIdNames = {
-  watchlist: `watchlists`,
-  history: `history`,
-  favorites: `favorites`,
-};
-
-const showStats = (cardsData) => {
-  films.classList.add(`visually-hidden`);
-  const statisticComponent = new Statistic(cardsData);
-  main.appendChild(statisticComponent.render());
-};
-
-const hideStats = () => {
-  if (document.querySelector(`.statistic`)) {
-    main.removeChild(document.querySelector(`.statistic`));
-  }
-  films.classList.remove(`visually-hidden`);
-};
-
 const profileRatingChange = (filmsToFilter) => {
   let userStatus = ``;
-  const filteredCardsamount = filmsToFilter.filter((it) => it.isWatched);
-  const amount = filteredCardsamount.length;
-  if (amount < 11) {
-    userStatus = `novice`;
-  } else if (amount < 21) {
-    userStatus = `fan`;
+  const filteredCardsAmount = filmsToFilter.filter((it) => it.isWatched);
+  const amount = filteredCardsAmount.length;
+  if (amount < ProfileRatingAmount.NOVICE) {
+    userStatus = ProfileRatingNames.NOVICE;
+  } else if (amount < ProfileRatingAmount.FAN) {
+    userStatus = ProfileRatingNames.FAN;
   } else {
-    userStatus = `movie buff`;
+    userStatus = ProfileRatingNames.BUFF;
   }
-  profileRating.innerHTML = ``;
-  profileRating.innerHTML = userStatus;
+  profileRating.textContent = userStatus;
 };
 
-const showInitialFilmsCount = (filmsToShow) => {
-  const filmsToShowCount = filmsToShow.length;
-  footerStatistics.innerHTML = ``;
-  footerStatistics.innerHTML = filmsToShowCount;
-};
-
-const filterCards = (cardsToFilter, filterName, value = false) => {
+const filterCards = (cardsToFilter, filterName, searchValue) => {
   switch (filterName) {
     case `all`:
       return cardsToFilter;
@@ -155,7 +137,11 @@ const filterCards = (cardsToFilter, filterName, value = false) => {
     case `favorites`:
       return cardsToFilter.filter((it) => it.isFavorite);
     case `search`:
-      return cardsToFilter.filter((card) => card.title.split(` `).find((it) => it.toLowerCase() === value));
+      return cardsToFilter.filter(
+          (card) => card.title.split(` `).find(
+              (it) => it.toLowerCase() === searchValue
+          )
+      );
     default:
       return cardsToFilter;
   }
@@ -164,7 +150,7 @@ const filterCards = (cardsToFilter, filterName, value = false) => {
 const updateFiltersCount = (cardsData) => {
   const mainNavigationItemCount = document.querySelectorAll(`.main-navigation__item-count`);
   Array.from(mainNavigationItemCount).forEach((filter, i) => {
-    filter.textContent = filterCards(cardsData, Object.values(filterIdNames)[i]).length;
+    filter.textContent = filterCards(cardsData, Object.values(FilterIdNames)[i]).length;
   });
 };
 
@@ -173,33 +159,43 @@ const renderFilters = (items, cardsData) => {
   for (const filterItem of items) {
     const filterComponent = new Filter(filterItem);
     filterComponent.onFilterClick = (filter) => {
+      searchComponent.clearSearchInput();
       if (filter === `all` || filter === `history` || filter === `watchlists` || filter === `favorites`) {
-        hideStats();
+        films.classList.remove(`visually-hidden`);
+        statisticComponent.hideStatistic();
         filteredCards = filterCards(cardsData, filter);
         filmsListContainer.innerHTML = ``;
         isNotFilteredCards = false;
         cardsCounter = 0;
-        renderCards(filteredCards, cardsData, isNotFilteredCards);
+        renderCards(cardsData);
       }
       if (filter === `stats`) {
-        showStats(cardsData);
+        films.classList.add(`visually-hidden`);
+        statisticComponent.showStatistic();
+        statisticComponent.updateStatisticFilters(cardsData);
       }
     };
     mainNavigation.appendChild(filterComponent.render());
   }
 };
 
+const renderMostCommentedCards = (cardsData) => {
+  filmsListContainerCommented.innerHTML = ``;
+  sortMostCommentedCards(cardsData).splice(0, 2).forEach((extraCard) => renderCard(extraCard, filmsListContainerCommented, cardsData, isExtra));
+};
+
 const renderCard = (card, container, cardsData, isextra) => {
   const cardComponent = new Card(card, isextra);
   const popupComponent = new Popup(card);
-  const body = document.querySelector(`body`);
   container.appendChild(cardComponent.render());
-
   cardComponent.onCommentsClick = () => {
     popupComponent.render();
-    body.appendChild(popupComponent.element);
+    document.body.appendChild(popupComponent.element);
   };
-
+  popupComponent.onClose = () => {
+    document.body.removeChild(popupComponent.element);
+    popupComponent.unrender();
+  };
   cardComponent.onWatchlistClick = () => {
     card.isInWatchlist = !card.isInWatchlist;
     provider.updateFilm({id: card.id, data: card.toRAW()})
@@ -208,11 +204,10 @@ const renderCard = (card, container, cardsData, isextra) => {
           });
     updateFiltersCount(cardsData);
   };
-
   cardComponent.onWatchedClick = () => {
     card.isWatched = !card.isWatched;
     if (card.isWatched) {
-      card.dateWatched = moment().format(`D MMMM YYYY`);
+      card.dateWatched = Date.now();
     }
     provider.updateFilm({id: card.id, data: card.toRAW()})
           .then((newCard) => {
@@ -221,7 +216,6 @@ const renderCard = (card, container, cardsData, isextra) => {
     updateFiltersCount(cardsData);
     profileRatingChange(cardsData);
   };
-
   cardComponent.onFavoriteClick = () => {
     card.isFavorite = !card.isFavorite;
     provider.updateFilm({id: card.id, data: card.toRAW()})
@@ -229,31 +223,25 @@ const renderCard = (card, container, cardsData, isextra) => {
             popupComponent.update(newCard);
           });
     updateFiltersCount(cardsData);
-    if (!card.isFavorite) {
-      cardComponent.unrender();
-    }
   };
-
   popupComponent.onComment = (newComment) => {
     card.comments.push(newComment.comment);
     popupComponent.commentBlock();
-
     provider.updateFilm({id: card.id, data: card.toRAW()})
             .then((newCard) => {
               cardComponent.update(newCard);
               popupComponent.update(newCard);
               popupComponent.rerender();
               popupComponent.commentUnblock();
-              popupComponent.showRating();
+              popupComponent.showRatingControls();
               popupComponent.showDeleteBtn();
+              renderMostCommentedCards(cardsData);
             })
             .catch(() => {
-              card.comments.pop();
               popupComponent.shake();
               popupComponent.commentUnblock();
             });
   };
-
   popupComponent.onDelete = () => {
     card.comments.pop();
     provider.updateFilm({id: card.id, data: card.toRAW()})
@@ -261,13 +249,14 @@ const renderCard = (card, container, cardsData, isextra) => {
               cardComponent.update(newCard);
               popupComponent.update(newCard);
               popupComponent.rerender();
+              popupComponent.showRatingControls();
               popupComponent.hideDeleteBtn();
+              renderMostCommentedCards(cardsData);
             })
             .catch(() => {
               popupComponent.shake();
             });
   };
-
   popupComponent.onWatchlistClick = () => {
     card.isInWatchlist = !card.isInWatchlist;
     provider.updateFilm({id: card.id, data: card.toRAW()})
@@ -278,12 +267,8 @@ const renderCard = (card, container, cardsData, isextra) => {
             updateFiltersCount(cardsData);
           });
   };
-
   popupComponent.onWatchedClick = () => {
     card.isWatched = !card.isWatched;
-    if (card.isWatched) {
-      card.dateWatched = moment().format(`D MMMM YYYY`);
-    }
     provider.updateFilm({id: card.id, data: card.toRAW()})
           .then((newCard) => {
             cardComponent.update(newCard);
@@ -293,7 +278,6 @@ const renderCard = (card, container, cardsData, isextra) => {
             profileRatingChange(cardsData);
           });
   };
-
   popupComponent.onFavoriteClick = () => {
     card.isFavorite = !card.isFavorite;
     provider.updateFilm({id: card.id, data: card.toRAW()})
@@ -304,82 +288,59 @@ const renderCard = (card, container, cardsData, isextra) => {
             updateFiltersCount(cardsData);
           });
   };
-
   popupComponent.onScore = (newScore) => {
-    const scoreInputs = popupComponent.element.querySelectorAll(`.film-details__user-rating-input`);
     card.userRating = newScore;
-    popupComponent.scoreBlock(scoreInputs);
-
+    popupComponent.disableScoreInputs();
     provider.updateFilm({id: card.id, data: card.toRAW()})
             .then((newCard) => {
-              popupComponent.scoreUnblock(scoreInputs);
+              popupComponent.unblockScoreInputs();
               cardComponent.update(newCard);
               popupComponent.update(newCard);
               popupComponent.rerender();
-              popupComponent.showRating();
             })
             .catch(() => {
-              popupComponent.scoreUnblock(scoreInputs);
+              popupComponent.unblockScoreInputs();
               popupComponent.shake();
             });
   };
-
-  popupComponent.onClose = () => {
-    body.removeChild(popupComponent.element);
-    popupComponent.unrender();
-    filmsListContainerCommented.innerHTML = ``;
-    sortMostCommentedCards(cardsData).forEach((cardEx) => renderCard(cardEx, filmsListContainerCommented, isExtra));
-    updateFiltersCount(cardsData);
-  };
-
-  popupComponent.onEsc = () => {
-    body.removeChild(popupComponent.element);
-    popupComponent.unrender();
-    filmsListContainerCommented.innerHTML = ``;
-    sortMostCommentedCards(cardsData).forEach((cardEx) => renderCard(cardEx, filmsListContainerCommented, isExtra));
-    renderFilters(filterItems, cardsData);
-  };
 };
 
-const renderCards = (cardsDataFiltered, cardsData, isCardsData) => {
-  cards = [];
-  if (isCardsData) {
-    cards = cardsData;
-  } else {
-    cards = cardsDataFiltered;
-  }
+const renderCards = (cardsData) => {
+  let cardsToRender = [];
 
-  if (cards.length > CARDS_AMOUNT) {
+  cardsToRender = isNotFilteredCards ? cardsData : filteredCards;
+
+  if (cardsToRender.length > CARDS_AMOUNT) {
     filmsListShowMore.classList.remove(`visually-hidden`);
   }
 
-  for (const card of cards.slice(cardsCounter, CARDS_AMOUNT + cardsCounter)) {
+  for (const card of cardsToRender.slice(cardsCounter, CARDS_AMOUNT + cardsCounter)) {
     renderCard(card, filmsListContainer, cardsData);
   }
 
   cardsCounter += CARDS_AMOUNT;
 
-  if (cardsCounter >= cards.length) {
+  if (cardsCounter >= cardsToRender.length) {
     filmsListShowMore.classList.add(`visually-hidden`);
   }
 };
 
 const renderSearch = (cardsData) => {
-  const searchComponent = new Search();
   searchComponent.onSearchInput = (inputValue) => {
     filteredCards = filterCards(cardsData, `search`, inputValue);
 
     if (filteredCards.length > 0) {
       filmsListContainer.innerHTML = ``;
       cardsCounter = 0;
-      renderCards(filteredCards, cardsData, false);
+      isNotFilteredCards = false;
+      renderCards(cardsData);
     }
 
     if (inputValue === ``) {
       filmsListContainer.innerHTML = ``;
       cardsCounter = 0;
-      renderCards(filteredCards, cardsData, true);
-      filmsListShowMore.classList.remove(`visually-hidden`);
+      isNotFilteredCards = true;
+      renderCards(cardsData);
     }
   };
   headerSearch.appendChild(searchComponent.render());
@@ -388,16 +349,16 @@ const renderSearch = (cardsData) => {
 provider.getFilms()
   .then((initialCardsData) => {
     hideFilmsTitleError();
-    renderCards(filteredCards, initialCardsData, isNotFilteredCards);
-    sortMostRatedCards(initialCardsData).forEach((card) => renderCard(card, filmsListContainerRated, initialCardsData, isExtra));
-    sortMostCommentedCards(initialCardsData).forEach((card) => renderCard(card, filmsListContainerCommented, initialCardsData, isExtra));
+    renderCards(initialCardsData);
+    sortMostRatedCards(initialCardsData).splice(0, 2).forEach((card) => renderCard(card, filmsListContainerRated, initialCardsData, isExtra));
+    sortMostCommentedCards(initialCardsData).splice(0, 2).forEach((card) => renderCard(card, filmsListContainerCommented, initialCardsData, isExtra));
     renderFilters(filterItems, initialCardsData);
     renderSearch(initialCardsData);
     profileRatingChange(initialCardsData);
-    showInitialFilmsCount(initialCardsData);
+    footerStatistics.textContent = initialCardsData.length;
     updateFiltersCount(initialCardsData);
     filmsListShowMore.addEventListener(`click`, () => {
-      renderCards(filteredCards, initialCardsData, isNotFilteredCards);
+      renderCards(initialCardsData);
     });
     cards = initialCardsData;
   })

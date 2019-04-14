@@ -1,9 +1,12 @@
 import {createElement} from './create-element.js';
 
+const COMPONENT_ERROR = `Can't instantiate BaseComponent, only concrete one.`;
+const TEMPLATE_ERROR = `You have to define template.`;
+
 export default class Component {
   constructor() {
     if (new.target === Component) {
-      throw new Error(`Can't instantiate BaseComponent, only concrete one.`);
+      throw new Error(COMPONENT_ERROR);
     }
 
     this._element = null;
@@ -14,7 +17,7 @@ export default class Component {
   }
 
   get template() {
-    throw new Error(`You have to define template.`);
+    throw new Error(TEMPLATE_ERROR);
   }
 
   render() {
@@ -29,12 +32,6 @@ export default class Component {
     this.unbind();
     this._element.remove();
     this._element = null;
-  }
-
-  rerender() {
-    this.unbind();
-    this._partialUpdate();
-    this.bind();
   }
 
   update() {}

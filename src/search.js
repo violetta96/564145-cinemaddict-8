@@ -1,7 +1,5 @@
 import Component from './component.js';
 
-// const KEYCODE_ENTER = 13;
-
 export default class Search extends Component {
   constructor() {
     super();
@@ -13,6 +11,10 @@ export default class Search extends Component {
     this._onInput = fn;
   }
 
+  get template() {
+    return `<input type="text" name="search" class="search__field" placeholder="Search">`.trim();
+  }
+
   _onSearchInputChange(evt) {
     const inputValue = evt.currentTarget.value.toLowerCase();
     if (typeof this._onInput === `function`) {
@@ -20,8 +22,8 @@ export default class Search extends Component {
     }
   }
 
-  get template() {
-    return `<input type="text" name="search" class="search__field" placeholder="Search">`.trim();
+  clearSearchInput() {
+    this._element.value = ``;
   }
 
   bind() {
