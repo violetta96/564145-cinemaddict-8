@@ -184,18 +184,7 @@ const renderMostCommentedCards = (cardsData) => {
   sortMostCommentedCards(cardsData).splice(0, 2).forEach((extraCard) => renderCard(extraCard, filmsListContainerCommented, cardsData, isExtra));
 };
 
-const renderCard = (card, container, cardsData, isextra) => {
-  const cardComponent = new Card(card, isextra);
-  const popupComponent = new Popup(card);
-  container.appendChild(cardComponent.render());
-  cardComponent.onCommentsClick = () => {
-    popupComponent.render();
-    document.body.appendChild(popupComponent.element);
-  };
-  popupComponent.onClose = () => {
-    document.body.removeChild(popupComponent.element);
-    popupComponent.unrender();
-  };
+const onFilmCardControls = (cardComponent, popupComponent, card, cardsData) => {
   cardComponent.onWatchlistClick = () => {
     card.isInWatchlist = !card.isInWatchlist;
     provider.updateFilm({id: card.id, data: card.toRAW()})
@@ -224,6 +213,55 @@ const renderCard = (card, container, cardsData, isextra) => {
           });
     updateFiltersCount(cardsData);
   };
+};
+
+const onPopupControls = (cardComponent, popupComponent, card, cardsData) => {
+  popupComponent.onWatchlistClick = () => {
+    card.isInWatchlist = !card.isInWatchlist;
+    provider.updateFilm({id: card.id, data: card.toRAW()})
+          .then((newCard) => {
+            cardComponent.update(newCard);
+            popupComponent.update(newCard);
+            popupComponent.rerender();
+            updateFiltersCount(cardsData);
+          });
+  };
+  popupComponent.onWatchedClick = () => {
+    card.isWatched = !card.isWatched;
+    provider.updateFilm({id: card.id, data: card.toRAW()})
+          .then((newCard) => {
+            cardComponent.update(newCard);
+            popupComponent.update(newCard);
+            popupComponent.rerender();
+            updateFiltersCount(cardsData);
+            profileRatingChange(cardsData);
+          });
+  };
+  popupComponent.onFavoriteClick = () => {
+    card.isFavorite = !card.isFavorite;
+    provider.updateFilm({id: card.id, data: card.toRAW()})
+          .then((newCard) => {
+            cardComponent.update(newCard);
+            popupComponent.update(newCard);
+            popupComponent.rerender();
+            updateFiltersCount(cardsData);
+          });
+  };
+};
+
+const renderCard = (card, container, cardsData, isextra) => {
+  const cardComponent = new Card(card, isextra);
+  const popupComponent = new Popup(card);
+  container.appendChild(cardComponent.render());
+  cardComponent.onCommentsClick = () => {
+    popupComponent.render();
+    document.body.appendChild(popupComponent.element);
+  };
+  popupComponent.onClose = () => {
+    document.body.removeChild(popupComponent.element);
+    popupComponent.unrender();
+  };
+  onFilmCardControls(cardComponent, popupComponent, card, cardsData);
   popupComponent.onComment = (newComment) => {
     card.comments.push(newComment.comment);
     popupComponent.commentBlock();
@@ -257,37 +295,7 @@ const renderCard = (card, container, cardsData, isextra) => {
               popupComponent.shake();
             });
   };
-  popupComponent.onWatchlistClick = () => {
-    card.isInWatchlist = !card.isInWatchlist;
-    provider.updateFilm({id: card.id, data: card.toRAW()})
-          .then((newCard) => {
-            cardComponent.update(newCard);
-            popupComponent.update(newCard);
-            popupComponent.rerender();
-            updateFiltersCount(cardsData);
-          });
-  };
-  popupComponent.onWatchedClick = () => {
-    card.isWatched = !card.isWatched;
-    provider.updateFilm({id: card.id, data: card.toRAW()})
-          .then((newCard) => {
-            cardComponent.update(newCard);
-            popupComponent.update(newCard);
-            popupComponent.rerender();
-            updateFiltersCount(cardsData);
-            profileRatingChange(cardsData);
-          });
-  };
-  popupComponent.onFavoriteClick = () => {
-    card.isFavorite = !card.isFavorite;
-    provider.updateFilm({id: card.id, data: card.toRAW()})
-          .then((newCard) => {
-            cardComponent.update(newCard);
-            popupComponent.update(newCard);
-            popupComponent.rerender();
-            updateFiltersCount(cardsData);
-          });
-  };
+  onPopupControls(cardComponent, popupComponent, card, cardsData);
   popupComponent.onScore = (newScore) => {
     card.userRating = newScore;
     popupComponent.disableScoreInputs();

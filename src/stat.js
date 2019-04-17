@@ -64,6 +64,21 @@ export default class Statistic extends Component {
     </section>`;
   }
 
+  updateStatisticFilters(data) {
+    this._watchedFilms = data.filter((film) => film.isWatched);
+    this._filteredFilms = this._watchedFilms;
+    this._element.querySelector(`.statistic__filters-input`).checked = true;
+    this._update();
+  }
+
+  hideStatistic() {
+    this._element.classList.add(`visually-hidden`);
+  }
+
+  showStatistic() {
+    this._element.classList.remove(`visually-hidden`);
+  }
+
   _onStatisticFilters() {
     const filter = this._element.querySelector(`.statistic__filters-input:checked`).value;
 
@@ -219,21 +234,6 @@ export default class Statistic extends Component {
     }
     this._generateCharts();
     return this._element;
-  }
-
-  updateStatisticFilters(data) {
-    this._watchedFilms = data.filter((film) => film.isWatched);
-    this._filteredFilms = this._watchedFilms;
-    this._element.querySelector(`.statistic__filters-input`).checked = true;
-    this._update();
-  }
-
-  hideStatistic() {
-    this._element.classList.add(`visually-hidden`);
-  }
-
-  showStatistic() {
-    this._element.classList.remove(`visually-hidden`);
   }
 
   bind() {

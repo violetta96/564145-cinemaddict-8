@@ -22,14 +22,6 @@ export default class ModelFilm {
     this.dateWatched = data[`user_details`][`watching_date`];
   }
 
-  static parseFilm(data) {
-    return new ModelFilm(data);
-  }
-
-  static parseFilms(data) {
-    return data.map(ModelFilm.parseFilm);
-  }
-
   toRAW() {
     return {
       'id': this.id,
@@ -42,5 +34,13 @@ export default class ModelFilm {
       },
       'comments': this.comments,
     };
+  }
+
+  static parseFilm(data) {
+    return new ModelFilm(data);
+  }
+
+  static parseFilms(data) {
+    return data.map(ModelFilm.parseFilm);
   }
 }

@@ -56,7 +56,7 @@ export default class Card extends Component {
                 <span class="film-card__genre ${![...this._genre].length ? `visually-hidden` : ``}">${[...this._genre][0]}</span>
               </p>
               <img src="${this._picture}" alt="${this._title}" class="film-card__poster">
-              <p class="film-card__description">${this._description.substring(0, MAX_LENGTH_DESCRIPTION) + `...`}</p>
+              <p class="film-card__description">${this._description.length <= MAX_LENGTH_DESCRIPTION ? this._description : `${this._description.substring(0, MAX_LENGTH_DESCRIPTION)}...`}</p>
               <button class="film-card__comments">${this._comments.length} comments</button>
               ${!this._isExtra ? `<form class="film-card__controls">
                 <button class="film-card__controls-item button film-card__controls-item--add-to-watchlist"><!--Add to watchlist--> WL</button>
