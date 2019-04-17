@@ -15,15 +15,15 @@ export default class Search extends Component {
     return `<input type="text" name="search" class="search__field" placeholder="Search">`.trim();
   }
 
+  clearSearchInput() {
+    this._element.value = ``;
+  }
+
   _onSearchInputChange(evt) {
     const inputValue = evt.currentTarget.value.toLowerCase();
     if (typeof this._onInput === `function`) {
       this._onInput(inputValue);
     }
-  }
-
-  clearSearchInput() {
-    this._element.value = ``;
   }
 
   bind() {

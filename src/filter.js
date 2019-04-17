@@ -16,6 +16,17 @@ export default class Filter extends Component {
     this._onFilter = fn;
   }
 
+  get template() {
+    return `<a
+            href="#${this._name}"
+            id="${this._id}"
+            class="main-navigation__item ${this._isActiveStatus ? `main-navigation__item--active` : ``} ${this._isAdditional ? `main-navigation__item--additional` : ``}"
+          >
+             ${this._name}
+             ${this._showAmount ? `<span class="main-navigation__item-count"></span>` : ` `}
+           </a>`.trim();
+  }
+
   _onFilterButtonClick(evt) {
     evt.preventDefault();
     if (typeof this._onFilter === `function`) {
@@ -28,17 +39,6 @@ export default class Filter extends Component {
       target.classList.add(`main-navigation__item--active`);
       this._onFilter(filter);
     }
-  }
-
-  get template() {
-    return `<a
-            href="#${this._name}"
-            id="${this._id}"
-            class="main-navigation__item ${this._isActiveStatus ? `main-navigation__item--active` : ``} ${this._isAdditional ? `main-navigation__item--additional` : ``}"
-          >
-             ${this._name}
-             ${this._showAmount ? `<span class="main-navigation__item-count"></span>` : ` `}
-           </a>`.trim();
   }
 
   bind() {
