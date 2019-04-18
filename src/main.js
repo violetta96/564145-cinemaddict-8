@@ -184,7 +184,7 @@ const renderMostCommentedCards = (cardsData) => {
   sortMostCommentedCards(cardsData).splice(0, 2).forEach((extraCard) => renderCard(extraCard, filmsListContainerCommented, cardsData, isExtra));
 };
 
-const onFilmCardControls = (cardComponent, popupComponent, card, cardsData) => {
+const addEventListenersOnFilmCardControls = (cardComponent, popupComponent, card, cardsData) => {
   cardComponent.onWatchlistClick = () => {
     card.isInWatchlist = !card.isInWatchlist;
     provider.updateFilm({id: card.id, data: card.toRAW()})
@@ -215,7 +215,7 @@ const onFilmCardControls = (cardComponent, popupComponent, card, cardsData) => {
   };
 };
 
-const onPopupControls = (cardComponent, popupComponent, card, cardsData) => {
+const addEventListenersOnPopupControls = (cardComponent, popupComponent, card, cardsData) => {
   popupComponent.onWatchlistClick = () => {
     card.isInWatchlist = !card.isInWatchlist;
     provider.updateFilm({id: card.id, data: card.toRAW()})
@@ -261,7 +261,7 @@ const renderCard = (card, container, cardsData, isextra) => {
     document.body.removeChild(popupComponent.element);
     popupComponent.unrender();
   };
-  onFilmCardControls(cardComponent, popupComponent, card, cardsData);
+  addEventListenersOnFilmCardControls(cardComponent, popupComponent, card, cardsData);
   popupComponent.onComment = (newComment) => {
     card.comments.push(newComment.comment);
     popupComponent.commentBlock();
@@ -295,7 +295,7 @@ const renderCard = (card, container, cardsData, isextra) => {
               popupComponent.shake();
             });
   };
-  onPopupControls(cardComponent, popupComponent, card, cardsData);
+  addEventListenersOnPopupControls(cardComponent, popupComponent, card, cardsData);
   popupComponent.onScore = (newScore) => {
     card.userRating = newScore;
     popupComponent.disableScoreInputs();
